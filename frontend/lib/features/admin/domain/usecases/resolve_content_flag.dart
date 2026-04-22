@@ -1,4 +1,4 @@
-import 'package:frontend/shared/domain/utils/either.dart';
+import 'package:dartz/dartz.dart';
 import 'package:frontend/shared/domain/error/failure.dart';
 import 'package:frontend/features/admin/domain/entities/content_flag.dart';
 import 'package:frontend/features/admin/domain/repositories/admin_repository.dart';

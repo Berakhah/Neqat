@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/providers/scanner_providers.dart';
-import 'package:frontend/presentation/screens/product_details_screen.dart';
 import 'package:frontend/l10n/app_localizations.dart';
 
 class ManualEntryPage extends ConsumerStatefulWidget {

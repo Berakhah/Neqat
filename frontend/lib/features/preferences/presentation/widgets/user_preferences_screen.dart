@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/tag.dart';
 import '../controllers/preferences_controller.dart';
-import '../providers/preferences_providers.dart';
 
 class UserPreferencesScreen extends ConsumerStatefulWidget {
-  const UserPreferencesScreen({Key? key}) : super(key: key);
+  const UserPreferencesScreen({super.key});
 
   @override
-  ConsumerState<UserPreferencesScreen> createState() => _UserPreferencesScreenState();
+  ConsumerState<UserPreferencesScreen> createState() =>
+      _UserPreferencesScreenState();
 }
 
 class _UserPreferencesScreenState extends ConsumerState<UserPreferencesScreen> {
@@ -35,14 +35,18 @@ class _UserPreferencesScreenState extends ConsumerState<UserPreferencesScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(tagsControllerProvider.notifier).loadTags();
-          await ref.read(preferencesControllerProvider.notifier).loadPreferences();
+          await ref
+              .read(preferencesControllerProvider.notifier)
+              .loadPreferences();
         },
         child: tagsState.isLoading || preferencesState.isLoading
             ? const Center(child: CircularProgressIndicator())
             : tagsState.error != null || preferencesState.error != null
                 ? Center(
                     child: Text(
-                      tagsState.error ?? preferencesState.error ?? 'Unknown error',
+                      tagsState.error ??
+                          preferencesState.error ??
+                          'Unknown error',
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -72,12 +76,14 @@ class _UserPreferencesScreenState extends ConsumerState<UserPreferencesScreen> {
                             Expanded(
                               child: ListView.separated(
                                 itemCount: tagsState.tags.length,
-                                separatorBuilder: (context, index) => const Divider(),
+                                separatorBuilder: (context, index) =>
+                                    const Divider(),
                                 itemBuilder: (context, index) {
                                   final tag = tagsState.tags[index];
                                   return _buildPreferenceSlider(
                                     tag,
-                                    preferencesState.getPreferenceForTag(tag.id),
+                                    preferencesState
+                                        .getPreferenceForTag(tag.id),
                                   );
                                 },
                               ),
@@ -156,4 +162,4 @@ class _UserPreferencesScreenState extends ConsumerState<UserPreferencesScreen> {
       return Colors.green;
     }
   }
-} 
+}

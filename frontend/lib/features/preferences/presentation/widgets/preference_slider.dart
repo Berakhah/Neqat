@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/domain/entities/tag.dart' as core;
-
 class PreferenceSlider extends StatelessWidget {
   // This can accept either the core Tag or the preferences Tag
   final dynamic tag;
@@ -9,18 +7,18 @@ class PreferenceSlider extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   const PreferenceSlider({
-    Key? key,
+    super.key,
     required this.tag,
     required this.preferenceLevel,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     // Extract name and description regardless of tag type
     final String name = tag.name;
     final String? description = tag.description;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -75,4 +73,4 @@ class PreferenceSlider extends StatelessWidget {
     if (value < 10) return "Often";
     return "Very Often";
   }
-} 
+}

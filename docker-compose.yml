@@ -1,0 +1,148 @@
+services:
+  # Django Backend
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    volumes:
+      # - ./backend:/app  # Removed: This mount overwrites installed dependencies
+      - ./certs:/app/certs
+      - static_volume:/app/staticfiles
+      - media_volume:/app/Images
+    env_file:
+      - ./backend/docker.env
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=1433
+      - DATABASE_ENGINE=mssql
+      - DATABASE_PASSWORD=NEQ@T2025ComplexPass!
+      - DATABASE_USER=sa
+      - DATABASE_OPTIONS=driver=ODBC Driver 18 for SQL Server;TrustServerCertificate=yes;Encrypt=no; 
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,http://frontend:3000,http://192.168.64.133:*,https://localhost:8443,https://localhost:*,http://localhost:53191
+      - KEYCLOAK_SERVER_URL=https://keycloak:8443
+      - PYTHONPATH=/app
+      - DJANGO_SETTINGS_MODULE=backend.settings
+      - FRONTEND_URL=https://192.168.64.133:8000
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,keycloak,192.168.64.133,192.168.64.132
+    depends_on:
+      db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    networks:
+      - neqat-network
+    restart: unless-stopped
+    command: python backend/manage.py runserver_plus 0.0.0.0:8000 --cert-file certs/keycloak.crt --key-file certs/keycloak.key
+    container_name: backend
+
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-20.04
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=NEQ@T2025ComplexPass!
+      - SA_PASSWORD=NEQ@T2025ComplexPass!
+      - MSSQL_PID=Express
+      - MSSQL_TCP_PORT=1433
+    volumes:
+      - db_data:/var/opt/mssql
+      - ./db-init.sql:/docker-entrypoint-initdb.d/db-init.sql
+    ports:
+      - "1433:1433"
+    networks:
+      - neqat-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "NEQ@T2025ComplexPass!" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=NEQ@T2025
+      - KC_DB=dev-file
+      - KC_FEATURES=admin-fine-grained-authz,preview
+      - KC_HTTP_RELATIVE_PATH=/
+      - KC_PROXY=edge
+      - KC_HOSTNAME_STRICT=false
+      - KC_HEALTH_ENABLED=true
+      - KC_HTTP_ENABLED=true
+      - KC_SPI_CONNECTIONS_HTTP_CLIENT_DEFAULT_REQUEST_REUSE_CONNECTIONS=true
+      - KC_SPI_CONNECTIONS_HTTP_CLIENT_DEFAULT_DISABLE_COOKIE_CACHE=true
+      - KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI=true
+      - KC_SPI_THEME_STATIC_MAX_AGE=-1
+      - KC_SPI_THEME_CACHE_THEMES=false
+      - KC_SPI_THEME_CACHE_TEMPLATES=false
+      - KC_CORS=true
+      # - KC_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost:*,https://localhost:*,http://127.0.0.1:*,http://192.168.64.132:*,https://192.168.64.132:*,http://localhost:62526,http://localhost:56015,http://localhost:57209
+      - KC_CORS_ALLOWED_ORIGINS=*
+      - KC_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - KC_CORS_ALLOWED_HEADERS=*
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_PORT=8443
+      - KC_HOSTNAME_URL=https://localhost:8443
+      - KC_FRONTEND_URL=https://localhost:8443
+      - KC_HTTPS_CERTIFICATE_FILE=/etc/x509/https/tls.crt
+      - KC_HTTPS_CERTIFICATE_KEY_FILE=/etc/x509/https/tls.key
+      # Email settings config (needs to be properly configured through admin console)
+      - KC_SPI_EMAIL_TEMPLATE_FROM=noreply@neqat.com
+      - KC_SPI_EMAIL_TEMPLATE_FROM_DISPLAY_NAME=Neqat
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./certs/keycloak.crt:/etc/x509/https/tls.crt
+      - ./certs/keycloak.key:/etc/x509/https/tls.key
+    command:
+      - start-dev
+      - --import-realm
+      - --https-certificate-file=/etc/x509/https/tls.crt
+      - --https-certificate-key-file=/etc/x509/https/tls.key
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    networks:
+      - neqat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+#   # Flutter Frontend
+#   frontend:
+#     build: ./frontend
+#     volumes:
+#       - ./frontend:/app
+#     env_file:
+#       - ./frontend/api.env
+#     environment:
+#       - django_api=http://192.168.64.132:8000
+#       - KEYCLOAK_URL=http://192.168.64.132:8080
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - backend
+#       - keycloak
+#     networks:
+#       - neqat-network
+#     restart: unless-stopped
+
+volumes:
+  db_data:
+  static_volume:
+  media_volume:
+  keycloak_data:
+
+networks:
+  neqat-network:
+    driver: bridge

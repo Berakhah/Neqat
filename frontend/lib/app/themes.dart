@@ -33,66 +33,55 @@ TextStyle getDeliusTextStyle({
 
 // ==================== Light Theme ====================
 final ThemeData lightTheme = ThemeData(
+  useMaterial3: true,
+  colorSchemeSeed: Colors.deepPurple,
   brightness: Brightness.light,
-  primarySwatch: Colors.blue,
-  colorScheme: ColorScheme.light(
-    primary: Colors.blue,
-    onPrimary: Colors.white,
-    surface: Colors.white,
-    onSurface: Colors.black,
-    secondary: Colors.blueAccent,
-    onSecondary: Colors.white,
-    error: Colors.red,
-    onError: Colors.white,
-  ),
   scaffoldBackgroundColor: Colors.white,
   appBarTheme: const AppBarTheme(
     color: Colors.white,
     elevation: 0,
-    iconTheme: IconThemeData(
-      color: Colors.black,
-    ), // Contrast with white background
+    iconTheme: IconThemeData(color: Colors.black),
     titleTextStyle: TextStyle(
-      color: Colors.white,
+      color: Colors.deepPurple,
       fontSize: 20,
       fontWeight: FontWeight.bold,
     ),
   ),
   textTheme: ThemeData.light().textTheme.copyWith(
-    displayLarge: TextStyle(
-      fontSize: 32,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    displayMedium: TextStyle(
-      fontSize: 28,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    displaySmall: TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    headlineMedium: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    headlineSmall: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    titleLarge: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
-    bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
-    bodySmall: TextStyle(fontSize: 12, color: Colors.black54),
-  ),
+        displayLarge: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        displayMedium: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        displaySmall: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        headlineMedium: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        headlineSmall: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        titleLarge: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        bodyLarge: const TextStyle(fontSize: 16, color: Colors.black87),
+        bodyMedium: const TextStyle(fontSize: 14, color: Colors.black87),
+        bodySmall: const TextStyle(fontSize: 12, color: Colors.black54),
+      ),
   buttonTheme: const ButtonThemeData(
     buttonColor: Colors.blue,
     textTheme: ButtonTextTheme.primary,
@@ -141,73 +130,79 @@ final ThemeData lightTheme = ThemeData(
     hintStyle: const TextStyle(color: Colors.grey),
   ),
   cardTheme: CardTheme(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    margin: const EdgeInsets.all(8),
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    margin: const EdgeInsets.all(12),
+    color: Colors.white,
+    shadowColor: Colors.deepPurple.withOpacity(0.1),
   ),
   dividerTheme: const DividerThemeData(
-    color: Colors.grey,
-    thickness: 1,
-    space: 16,
+    color: Colors.deepPurpleAccent,
+    thickness: 1.2,
+    space: 20,
+  ),
+  pageTransitionsTheme: const PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+    },
   ),
 );
 
 // ==================== Dark Theme ====================
 final ThemeData darkTheme = ThemeData(
-  scaffoldBackgroundColor: Colors.black87,
+  useMaterial3: true,
+  colorSchemeSeed: Colors.deepPurple,
   brightness: Brightness.dark,
-  colorScheme: ColorScheme.dark(
-    primary: Colors.blue,
-    surface: Colors.black,
-    brightness: Brightness.dark,
-  ),
-  primarySwatch: Colors.blueGrey,
-  primaryColor: Colors.blue,
-  appBarTheme: AppBarTheme(
-    color: Colors.grey[900],
+  scaffoldBackgroundColor: Colors.black,
+  appBarTheme: const AppBarTheme(
+    color: Colors.black,
     elevation: 0,
-    iconTheme: const IconThemeData(color: Colors.white),
-    titleTextStyle: const TextStyle(
-      color: Colors.white,
+    iconTheme: IconThemeData(color: Colors.white),
+    titleTextStyle: TextStyle(
+      color: Colors.deepPurpleAccent,
       fontSize: 20,
       fontWeight: FontWeight.bold,
     ),
   ),
   textTheme: ThemeData.dark().textTheme.copyWith(
-    displayLarge: TextStyle(
-      fontSize: 32,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    displayMedium: TextStyle(
-      fontSize: 28,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    displaySmall: TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    headlineMedium: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    headlineSmall: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    titleLarge: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-    bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
-    bodyMedium: TextStyle(fontSize: 14, color: Colors.white),
-    bodySmall: TextStyle(fontSize: 12, color: Colors.grey),
-  ),
+        displayLarge: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        displayMedium: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        displaySmall: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        headlineMedium: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        headlineSmall: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        titleLarge: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        bodyLarge: const TextStyle(fontSize: 16, color: Colors.white),
+        bodyMedium: const TextStyle(fontSize: 14, color: Colors.white),
+        bodySmall: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
   buttonTheme: const ButtonThemeData(
     buttonColor: Colors.blueGrey,
     textTheme: ButtonTextTheme.primary,
@@ -256,13 +251,24 @@ final ThemeData darkTheme = ThemeData(
     hintStyle: const TextStyle(color: Colors.grey),
   ),
   cardTheme: CardTheme(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    margin: const EdgeInsets.all(8),
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    margin: const EdgeInsets.all(12),
+    color: Colors.grey[900],
+    shadowColor: Colors.deepPurple.withOpacity(0.2),
   ),
   dividerTheme: const DividerThemeData(
-    color: Colors.grey,
-    thickness: 1,
-    space: 16,
+    color: Colors.deepPurple,
+    thickness: 1.2,
+    space: 20,
+  ),
+  pageTransitionsTheme: const PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+      TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+    },
   ),
 );

@@ -3,8 +3,13 @@ import json
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
-from .models import SystemLog, UserActivity, NeqatUser
 import uuid
+from .models import SystemLog
+import logging
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+logger = logging.getLogger(__name__)
 
 class SystemLogMiddleware(MiddlewareMixin):
     """
@@ -21,93 +26,104 @@ class SystemLogMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
-    
+
     def process_request(self, request):
-        request.start_time = time.time()
-        return None
-    
-    def process_response(self, request, response):
-        # Skip logging for static and media files
-        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(settings.MEDIA_URL):
-            return response
-            
-        # Safely check if user is authenticated
-        is_authenticated = hasattr(request, 'user') and request.user is not None and request.user.is_authenticated
-            
-        # Log specific actions
-        if is_authenticated:
-            self._update_user_activity(request)
-            
-            # Log login events
-            if request.path.endswith('/login/') and request.method == 'POST' and 200 <= response.status_code < 300:
-                self._log_event(request, 'LOGIN', 'User logged in successfully', response)
-                
-            # Log logout events
-            elif request.path.endswith('/logout/') and request.method == 'POST':
-                self._log_event(request, 'LOGOUT', 'User logged out', response)
-                
-            # Log profile updates
-            elif request.path.endswith('/user/profile/') and request.method in ['PUT', 'PATCH']:
-                self._log_event(request, 'PROFILE_UPDATE', 'User updated their profile', response)
-                
-        # Log registration events
-        elif request.path.endswith('/register/') and request.method == 'POST' and 200 <= response.status_code < 300:
-            try:
-                data = json.loads(request.body)
-                email = data.get('email', 'Unknown')
-                details = f"New user registration with email: {email}"
-                self._log_event(request, 'REGISTER', details, response, user=None)
-            except Exception:
-                pass
-                
-        # Log password reset events
-        elif request.path.endswith('/forgot-password/') and request.method == 'POST':
-            try:
-                data = json.loads(request.body)
-                email = data.get('email', 'Unknown')
-                details = f"Password reset requested for email: {email}"
-                
-                # Try to find the associated user
-                try:
-                    user = NeqatUser.objects.get(email=email)
-                    self._log_event(request, 'PASSWORD_RESET', details, response, user=user)
-                except NeqatUser.DoesNotExist:
-                    self._log_event(request, 'PASSWORD_RESET', details, response, user=None)
-            except Exception:
-                pass
+        if not request.path.startswith('/api/'):  # Only log API requests
+            return
         
-        # Log admin actions for improved tracking
-        elif request.path.startswith('/admin/') and is_authenticated and request.user.is_staff:
-            if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
-                path_parts = request.path.strip('/').split('/')
-                if len(path_parts) > 2:
-                    model_name = path_parts[1]
-                    details = f"Admin action on {model_name}: {request.method}"
-                    self._log_event(request, 'ADMIN_ACTION', details, response)
+        try:
+            request.request_id = str(uuid.uuid4())
+            user = request.user if request.user.is_authenticated else None
+            ip_address = self.get_client_ip(request)
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            
+            log_entry = SystemLog.objects.create(
+                request_id=request.request_id,
+                user=user,
+                action='API Request - Start',
+                details=f'{request.method} {request.path}',
+                outcome='pending',
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+
+            # Broadcast initial log entry
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    "admin_logs",
+                    {
+                        "type": "send_log_message",
+                        "message": {
+                            "id": str(log_entry.id),
+                            "type": "system_log",
+                            "request_id": str(log_entry.request_id),
+                            "user": str(log_entry.user) if log_entry.user else "Anonymous",
+                            "action": log_entry.action,
+                            "details": log_entry.details,
+                            "outcome": log_entry.outcome,
+                            "timestamp": str(log_entry.timestamp),
+                            "ip_address": log_entry.ip_address,
+                            "user_agent": log_entry.user_agent,
+                        },
+                    }
+                )
+
+        except Exception as e:
+            logger.error(f"Error logging request in middleware: {e}")
+
+    def process_response(self, request, response):
+        if not request.path.startswith('/api/') or not hasattr(request, 'request_id'):
+            return response
+        
+        try:
+            # Create a new log entry for the response, linked by request_id
+            user = request.user if request.user.is_authenticated else None
+            ip_address = self.get_client_ip(request)
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+            log_entry = SystemLog.objects.create(
+                request_id=request.request_id,
+                user=user,
+                action='API Request - End',
+                details=f'{request.method} {request.path} | Status: {response.status_code}',
+                outcome=f'HTTP {response.status_code}',
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+
+            # Broadcast updated log entry (now a new entry)
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    "admin_logs",
+                    {
+                        "type": "send_log_message",
+                        "message": {
+                            "id": str(log_entry.id),
+                            "type": "system_log_update",
+                            "request_id": str(log_entry.request_id),
+                            "user": str(log_entry.user) if log_entry.user else "Anonymous",
+                            "action": log_entry.action,
+                            "details": log_entry.details,
+                            "outcome": log_entry.outcome,
+                            "timestamp": str(log_entry.timestamp),
+                            "ip_address": log_entry.ip_address,
+                            "user_agent": log_entry.user_agent,
+                        },
+                    }
+                )
+
+        except Exception as e:
+            logger.error(f"Error updating SystemLog entry in middleware: {e}")
         
         return response
     
-    def _log_event(self, request, action, details, response, user=None):
-        # Get or use provided user
-        if user is None and hasattr(request, 'user') and request.user is not None and request.user.is_authenticated:
-            user = request.user
-            
-        # Create the system log entry
-        try:
-            SystemLog.objects.create(
-                user=user,
-                action=action,
-                details=details,
-                ip_address=self.get_client_ip(request),
-                user_agent=request.META.get('HTTP_USER_AGENT', '')
-            )
-        except Exception as e:
-            print(f"Error logging event: {str(e)}")
-    
     def _update_user_activity(self, request):
         """Update the user's activity record"""
-        if hasattr(request, 'user') and request.user is not None and request.user.is_authenticated:
+        if hasattr(request, 'user') and request.user.is_authenticated:
             try:
+                from .models import UserActivity
                 user_activity, created = UserActivity.objects.get_or_create(user=request.user)
                 user_activity.last_active = timezone.now()
                 
@@ -142,7 +158,7 @@ class UUIDMiddleware:
         response = self.get_response(request)
         
         # Only process JSON responses
-        if hasattr(response, 'content') and response.headers.get('Content-Type', '').startswith('application/json'):
+        if hasattr(response, 'content') and response.get('Content-Type', '').startswith('application/json'):
             try:
                 # Decode the content
                 content = response.content.decode('utf-8')
@@ -154,6 +170,7 @@ class UUIDMiddleware:
                 # Update the content length
                 response['Content-Length'] = len(response.content)
             except (json.JSONDecodeError, UnicodeDecodeError):
+                # If we can't decode the response, leave it as is
                 pass
                 
         return response 

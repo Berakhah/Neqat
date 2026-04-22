@@ -22,7 +22,7 @@ class OpenFoodFactsRemoteDataSource implements ProductRemoteDataSource {
     final config = ProductSearchQueryConfiguration(
       parametersList: [
         SearchTerms(terms: [query]),
-        PageSize(size: 50),
+        const PageSize(size: 50),
       ],
       language: OpenFoodFactsLanguage.ENGLISH,
       fields: [

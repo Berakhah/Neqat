@@ -30,7 +30,7 @@ class CommentModel extends Comment {
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'],
-      createdBy: json['created_by']['username'] ?? 'Unknown',
+      createdBy: json['created_by'] ?? 'Unknown',
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       status: json['status'],
@@ -38,7 +38,7 @@ class CommentModel extends Comment {
       content: json['content'],
       parentCommentId: json['parent_comment'],
       moderationNotes: json['moderation_notes'],
-      moderatedBy: json['moderated_by'] != null ? json['moderated_by']['username'] : null,
+      moderatedBy: json['moderated_by'],
       moderatedAt: json['moderated_at'] != null ? DateTime.parse(json['moderated_at']) : null,
     );
   }

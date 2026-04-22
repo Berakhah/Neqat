@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:frontend/application/data_sources/category_list.dart';
 import 'package:frontend/application/data_sources/news.dart';
 import 'package:frontend/application/data_sources/slider_data.dart';
 import 'package:frontend/domain/entities/article_model.dart';
 import 'package:frontend/domain/entities/category_model.dart';
 import 'package:frontend/domain/entities/slider_model.dart';
-import 'package:frontend/presentation/screens/article_view.dart';
 import 'package:frontend/presentation/widgets/blog_tile.dart';
 import 'package:frontend/l10n/app_localizations.dart';
 import 'package:shimmer/shimmer.dart';
@@ -51,14 +48,15 @@ class _AllNewsState extends ConsumerState<AllNews> {
   }
 
   Future<void> getNews() async {
-    final newsClass = News();
-    await newsClass.getNews(ref);
-    articles = newsClass.news
-        .where(
-          (article) =>
-              article.urlToImage != null && article.urlToImage!.isNotEmpty,
-        )
-        .toList();
+    try {
+      final newsDataSource = News();
+      await newsDataSource.getNews(ref);
+      articles = newsDataSource.news
+          .where((article) => article.urlToImage != null && article.urlToImage!.isNotEmpty)
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching news: $e');
+    }
   }
 
   @override
@@ -173,7 +171,6 @@ class _AllNewsState extends ConsumerState<AllNews> {
             } else {
               if (widget.news.toLowerCase() == l10n.topCategory.toLowerCase()) {
                 final article = ArticleModel(
-                  type: ArticleType.news,
                   title: sliders[index].title,
                   description: sliders[index].description,
                   url: sliders[index].url,

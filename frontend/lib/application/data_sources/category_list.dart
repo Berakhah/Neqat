@@ -4,37 +4,37 @@ List<CategoryModel> getCategories() {
   List<CategoryModel> category = [];
 
   CategoryModel categoryModel = CategoryModel();
-  categoryModel.name = "business";
+  categoryModel.name = "Business";
   categoryModel.image = "images/politics.png";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "entertainment";
+  categoryModel.name = "Entertainment";
   categoryModel.image = "images/entertainment.jpg";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "general";
+  categoryModel.name = "General";
   categoryModel.image = "images/general.jpg";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "health";
+  categoryModel.name = "Health";
   categoryModel.image = "images/health.jpeg";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "science";
+  categoryModel.name = "Science";
   categoryModel.image = "images/science.jpg";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "sports";
+  categoryModel.name = "Sports";
   categoryModel.image = "images/sports.png";
   category.add(categoryModel);
 
   categoryModel = CategoryModel();
-  categoryModel.name = "technology";
+  categoryModel.name = "Technology";
   categoryModel.image = "images/technology.jpg";
   category.add(categoryModel);
 

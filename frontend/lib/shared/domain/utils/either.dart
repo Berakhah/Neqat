@@ -1,3 +1,6 @@
+// DEPRECATED: Use 'package:dartz/dartz.dart' for Either instead of this file.
+// This file is kept for legacy reasons but should not be used in new code.
+
 abstract class Either<L, R> {
   const Either();
 

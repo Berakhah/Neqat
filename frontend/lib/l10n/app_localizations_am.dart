@@ -60,8 +60,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get cancelButton => 'መሰረዝ';
 
   @override
-  String get webBarcodeUnsupported =>
-      'ባርኮድ መቃኘት በድር ላይ አይደገፍም።\nእባክዎ በሞባይል መሣሪያ ላይ ይሞክሩ።';
+  String get webBarcodeUnsupported => 'ባርኮድ መቃኘት በድር ላይ አይደገፍም።\nእባክዎ በሞባይል መሣሪያ ላይ ይሞክሩ።';
 
   @override
   String get imageLoadFailed => 'ምስል መጫን አልተሳካም';
@@ -85,8 +84,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get enterCodeManuallyPrompt => 'ወይም ኮድ በእጅ ያስገቡ';
 
   @override
-  String get manualEntryNonWebPrompt =>
-      'ባርኮድ በካሜራ መፈለግ ካልቻሉ፣ በእጅ ማስገባት ይችላሉ። ኮዱ 13 አሃዞችን መያዝ አለበት።';
+  String get manualEntryNonWebPrompt => 'ባርኮድ በካሜራ መፈለግ ካልቻሉ፣ በእጅ ማስገባት ይችላሉ። ኮዱ 13 አሃዞችን መያዝ አለበት።';
 
   @override
   String get enterCodeButton => 'ኮድ አስገባ';
@@ -148,6 +146,12 @@ class AppLocalizationsAm extends AppLocalizations {
   String get fullNameHint => 'ሙሉ ስም';
 
   @override
+  String get firstNameHint => 'የመጀመሪያ ስም';
+
+  @override
+  String get lastNameHint => 'የመጨረሻ ስም';
+
+  @override
   String get confirmPasswordHint => 'የይለፍ ቃል አረጋግጥ';
 
   @override
@@ -157,8 +161,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get invalidEmailError => 'እባክህ ትክክለኛ ኢሜል አስገባ';
 
   @override
-  String get passwordRequirementError =>
-      'የይለፍ ቃል ቢያንስ 8 ቁምፊዎች መሆን አለበት እና ፊደሎችን እና ቁጥሮችን መያዝ አለበት';
+  String get passwordRequirementError => 'የይለፍ ቃል ቢያንስ 8 ቁምፊዎች መሆን አለበት እና ፊደሎችን እና ቁጥሮችን መያዝ አለበት';
 
   @override
   String get passwordMismatchError => 'የይለፍ ቃሎች አይዛመዱም';
@@ -227,22 +230,19 @@ class AppLocalizationsAm extends AppLocalizations {
   String get onboardingFirstTitle => 'ንቃተ ህሊና በጣቶችህ ጫፍ';
 
   @override
-  String get onboardingFirstDescription =>
-      'የቅርብ ጊዜ ዜናዎችን መከታተልም ሆነ ስለ ምርቶች እውነትን ማወቅ፣ መተግበሪያችን ንቃተ ህሊናህን እንድትጠብቅ እና በመረጃ ላይ የተመሰረተ ውሳኔ እንድታደርግ ያስችልሃል።';
+  String get onboardingFirstDescription => 'የቅርብ ጊዜ ዜናዎችን መከታተልም ሆነ ስለ ምርቶች እውነትን ማወቅ፣ መተግበሪያችን ንቃተ ህሊናህን እንድትጠብቅ እና በመረጃ ላይ የተመሰረተ ውሳኔ እንድታደርግ ያስችልሃል።';
 
   @override
   String get onboardingSecondTitle => 'የምትገዛውን ተረዳ';
 
   @override
-  String get onboardingSecondDescription =>
-      'የምርት ባርኮዶችን ቃኝ ወይም የተጠቃሚዎችን አስተያየት አንብብ ስለ ምርቶች እውነትን ለመረዳት። በመረጃ ላይ የተመሰረተ ምርጫ አድርግ እና በልበ ሙሉነት ግዢ አድርግ።';
+  String get onboardingSecondDescription => 'የምርት ባርኮዶችን ቃኝ ወይም የተጠቃሚዎችን አስተያየት አንብብ ስለ ምርቶች እውነትን ለመረዳት። በመረጃ ላይ የተመሰረተ ምርጫ አድርግ እና በልበ ሙሉነት ግዢ አድርግ።';
 
   @override
   String get onboardingThirdTitle => 'መረጃ ይኑርህ፣ ቀድመህ ቆይ';
 
   @override
-  String get onboardingThirdDescription =>
-      'ለአንተ አስፈላጊ በሆኑ ርዕሰ ጉዳዮች ላይ የተመረጡ የዜና ዝመናዎችን ተቀበል። በዓለም ዙሪያህ ስላለው መረጃ እወቅ እና የተሻሉ ውሳኔዎችን አድርግ';
+  String get onboardingThirdDescription => 'ለአንተ አስፈላጊ በሆኑ ርዕሰ ጉዳዮች ላይ የተመረጡ የዜና ዝመናዎችን ተቀበል። በዓለም ዙሪያህ ስላለው መረጃ እወቅ እና የተሻሉ ውሳኔዎችን አድርግ';
 
   @override
   String get nextButton => 'ቀጣይ';
@@ -260,7 +260,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get resetPasswordTitle => 'የይለፍ ቃል መመለስ';
 
   @override
-  String get verificationCodePrompt => 'ወደ ኢሜልህ የተላከውን የማረጋገጊያ ኮድ አስገባ';
+  String get verificationCodePrompt => 'ወደ ኢሜልህ የተላከውን የማረጋገጫ ኮድ አስገባ';
 
   @override
   String get emailEmptyError => 'እባክህ ኢሜልህን አስገባ';
@@ -281,7 +281,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get rememberPasswordLink => 'የይለፍ ቃልህን አስታወስክ? ግባ';
 
   @override
-  String get verificationCodeHint => 'የማረጋገጊያ ኮድ';
+  String get verificationCodeHint => 'የማረጋገጫ ኮድ';
 
   @override
   String get newPasswordHint => 'አዲስ የይለፍ ቃል';
@@ -294,6 +294,9 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get resetPasswordButton => 'የይለፍ ቃል መልስ';
+
+  @override
+  String get resendCodeButton => 'ኮድ እንደገና ላክ';
 
   @override
   String newsTitle(String category) {
@@ -355,126 +358,4 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get technologyCategory => 'ቴክኖሎጂ';
-
-  @override
-  String get commentsPageTitle => 'ሪፕላይቶች';
-
-  @override
-  String get noCommentsMessage => 'አሁን ምንም ሪፕላይ የለም';
-
-  @override
-  String get addCommentHint => 'ሪፕላይ ያክሉ...';
-
-  @override
-  String get writeReplyHint => 'መልስህን ጽፈት...';
-
-  @override
-  String get loginAgainMessage => 'እባክዎ ፈጥነው ደግሞ ግቡ';
-
-  @override
-  String get sessionExpiredMessage => 'የክፍያ ጊዜ አልፏል። እባክዎ እንደገና ግቡ።';
-
-  @override
-  String tokenRefreshError(String error) {
-    return 'የቶክን መመልከቻ ስህተት፡ $error';
-  }
-
-  @override
-  String get articleNotFoundMessage => 'ጽሁፍ በመዋቅር ውስጥ አልተገኘም';
-
-  @override
-  String fetchArticleIdError(String details) {
-    return 'የጽሁፍ ID መገንጠጥ አልተሳካም፡ $details';
-  }
-
-  @override
-  String fetchArticleIdException(String error) {
-    return 'የጽሁፍ ID መገንጠጥ ስህት፡ $error';
-  }
-
-  @override
-  String get invalidCommentDataMessage => 'የሪፕላይ ውሂብ መልኩ ያልተመደበ ነው';
-
-  @override
-  String loadCommentsError(String details) {
-    return 'ሪፕላይቶችን መጫን አልተሳካም፡ $details';
-  }
-
-  @override
-  String loadCommentsException(String error) {
-    return 'ሪፕላይቶችን መጫን ስህት፡ $error';
-  }
-
-  @override
-  String get postCommentNoIdMessage => 'ሪፕላይ ሊፈጸም አይችልም፡ ጽሁፍ ID አልተገኘም';
-
-  @override
-  String get emptyCommentMessage => 'ሪፕላይ መጽሐፍ ባዶ መሆን አይቻልም';
-
-  @override
-  String get commentPostedMessage => 'ሪፕላዩ በተሳካ ሁኔታ ተገኝቷል';
-
-  @override
-  String postCommentError(String details) {
-    return 'ሪፕላዩን መቀመጥ አልተሳካም፡ $details';
-  }
-
-  @override
-  String generalErrorMessage(String error) {
-    return 'ስህተት፡ $error';
-  }
-
-  @override
-  String replyingToLabel(String username) {
-    return 'ለ @$username መልስ መስጠት';
-  }
-
-  @override
-  String replyCountLabel(int count, int countIsOne) {
-    String _temp0 = intl.Intl.pluralLogic(
-      countIsOne,
-      locale: localeName,
-      other: 'ቶች',
-      one: 'ት',
-    );
-    return '$count መልስ$_temp0';
-  }
-
-  @override
-  String get searchNewsHint => 'ዜና ፈልግ';
-
-  @override
-  String originalQueryLabel(String query) {
-    return 'ዋናው: $query';
-  }
-
-  @override
-  String stemmedQueryLabel(String query) {
-    return 'የተጣራ: $query';
-  }
-
-  @override
-  String get noNewsOrMessagesFound => 'ምንም ዜና ወይም የቴሌግራም መልዕክቶች አልተገኙም';
-
-  @override
-  String totalArticlesLabel(int count) {
-    return '$count አቃፊዎች ተገኝተዋል';
-  }
-
-  @override
-  String totalTelegramMessagesLabel(int count) {
-    return '$count የቴሌግራም መልዕክቶች ተገኝተዋል';
-  }
-
-  @override
-  String get bookmarksTitle => 'መዝግቦች';
-
-  @override
-  String get noBookmarksMessage => 'ምንም መዝግቦች የሉም';
-
-  @override
-  String get errorLoadingBookmarks => 'መዝግቦችን ማስጫን አልተሳካም።';
-
-  @override
-  String get retryButton => 'ዳግም መሞከር';
 }

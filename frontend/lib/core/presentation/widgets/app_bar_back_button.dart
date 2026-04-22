@@ -5,10 +5,10 @@ class AppBarBackButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   const AppBarBackButton({
-    Key? key,
+    super.key,
     this.color,
     this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('user_name', models.CharField(max_length=50, unique=True)),
                 ('first_name', models.CharField(blank=True, max_length=50, null=True)),
                 ('last_name', models.CharField(blank=True, max_length=50, null=True)),
-                ('email', models.EmailField(max_length=255, null=True, unique=True)),
+                ('email', models.EmailField(max_length=255, null=True)),
                 ('date_joined', models.DateTimeField(auto_now_add=True)),
                 ('is_active', models.BooleanField(default=True)),
                 ('is_staff', models.BooleanField(default=False)),

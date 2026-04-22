@@ -2,14 +2,10 @@ import '../../domain/entities/tag.dart';
 
 class TagModel extends Tag {
   const TagModel({
-    required String id,
-    required String name,
-    String? description,
-  }) : super(
-          id: id,
-          name: name,
-          description: description,
-        );
+    required super.id,
+    required super.name,
+    super.description,
+  });
 
   factory TagModel.fromJson(Map<String, dynamic> json) {
     return TagModel(

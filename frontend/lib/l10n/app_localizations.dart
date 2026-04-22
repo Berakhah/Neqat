@@ -46,12 +46,12 @@ import 'app_localizations_en.dart';
 ///
 /// iOS applications define key application metadata, including supported
 /// locales, in an Info.plist file that is built into the application bundle.
-/// To configure the locales supported by your app, you’ll need to edit this
+/// To configure the locales supported by your app, you'll need to edit this
 /// file.
 ///
-/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// First, open your project's ios/Runner.xcworkspace Xcode workspace file.
 /// Then, in the Project Navigator, open the Info.plist file under the Runner
-/// project’s Runner folder.
+/// project's Runner folder.
 ///
 /// Next, select the Information Property List item, select Add Item from the
 /// Editor menu, then select Localizations from the pop-up menu.
@@ -62,8 +62,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('am'),
-    Locale('en'),
+    Locale('en')
   ];
 
   /// No description provided for @appTitle.
@@ -368,6 +365,18 @@ abstract class AppLocalizations {
   /// **'Full Name'**
   String get fullNameHint;
 
+  /// No description provided for @firstNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'First Name'**
+  String get firstNameHint;
+
+  /// No description provided for @lastNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Name'**
+  String get lastNameHint;
+
   /// No description provided for @confirmPasswordHint.
   ///
   /// In en, this message translates to:
@@ -527,7 +536,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingFirstDescription.
   ///
   /// In en, this message translates to:
-  /// **'Whether it’s staying updated on the latest news or knowing the truth about products, our app empowers you to stay aware and make informed decisions.'**
+  /// **'Whether it's staying updated on the latest news or knowing the truth about products, our app empowers you to stay aware and make informed decisions.'**
   String get onboardingFirstDescription;
 
   /// No description provided for @onboardingSecondTitle.
@@ -656,6 +665,12 @@ abstract class AppLocalizations {
   /// **'Reset Password'**
   String get resetPasswordButton;
 
+  /// No description provided for @resendCodeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCodeButton;
+
   /// Title for a news section with a dynamic category name
   ///
   /// In en, this message translates to:
@@ -769,190 +784,9 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Technology'**
   String get technologyCategory;
-
-  /// Title of the comments page
-  ///
-  /// In en, this message translates to:
-  /// **'Comments'**
-  String get commentsPageTitle;
-
-  /// Message displayed when there are no comments
-  ///
-  /// In en, this message translates to:
-  /// **'No comments yet'**
-  String get noCommentsMessage;
-
-  /// Hint text for adding a new comment
-  ///
-  /// In en, this message translates to:
-  /// **'Add a comment...'**
-  String get addCommentHint;
-
-  /// Hint text for replying to a comment
-  ///
-  /// In en, this message translates to:
-  /// **'Write your reply...'**
-  String get writeReplyHint;
-
-  /// Message prompting user to log in again
-  ///
-  /// In en, this message translates to:
-  /// **'Please log in again'**
-  String get loginAgainMessage;
-
-  /// Message indicating session expiration
-  ///
-  /// In en, this message translates to:
-  /// **'Session expired. Please log in again.'**
-  String get sessionExpiredMessage;
-
-  /// Error message for token refresh failure
-  ///
-  /// In en, this message translates to:
-  /// **'Error refreshing token: {error}'**
-  String tokenRefreshError(String error);
-
-  /// Message when an article is not found in the backend
-  ///
-  /// In en, this message translates to:
-  /// **'Article not found in backend'**
-  String get articleNotFoundMessage;
-
-  /// Error message for failing to fetch article ID
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to fetch article ID: {details}'**
-  String fetchArticleIdError(String details);
-
-  /// Exception message for fetching article ID
-  ///
-  /// In en, this message translates to:
-  /// **'Error fetching article ID: {error}'**
-  String fetchArticleIdException(String error);
-
-  /// Message for invalid comment data format
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid comment data format'**
-  String get invalidCommentDataMessage;
-
-  /// Error message for failing to load comments
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load comments: {details}'**
-  String loadCommentsError(String details);
-
-  /// Exception message for loading comments
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading comments: {error}'**
-  String loadCommentsException(String error);
-
-  /// Message when posting a comment fails due to missing article ID
-  ///
-  /// In en, this message translates to:
-  /// **'Cannot post comment: Article ID not found'**
-  String get postCommentNoIdMessage;
-
-  /// Message when a comment field is empty
-  ///
-  /// In en, this message translates to:
-  /// **'Comment cannot be empty'**
-  String get emptyCommentMessage;
-
-  /// Success message for posting a comment
-  ///
-  /// In en, this message translates to:
-  /// **'Comment posted successfully'**
-  String get commentPostedMessage;
-
-  /// Error message for failing to post a comment
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to post comment: {details}'**
-  String postCommentError(String details);
-
-  /// General error message
-  ///
-  /// In en, this message translates to:
-  /// **'Error: {error}'**
-  String generalErrorMessage(String error);
-
-  /// Label indicating a reply to a specific user
-  ///
-  /// In en, this message translates to:
-  /// **'Replying to @{username}'**
-  String replyingToLabel(String username);
-
-  /// Label for the number of replies, with plural support
-  ///
-  /// In en, this message translates to:
-  /// **'{count} repl{countIsOne, plural, one{y} other{ies}}'**
-  String replyCountLabel(int count, int countIsOne);
-
-  /// Hint text for the search news input field
-  ///
-  /// In en, this message translates to:
-  /// **'Search News'**
-  String get searchNewsHint;
-
-  /// Label for the original search query
-  ///
-  /// In en, this message translates to:
-  /// **'Original: {query}'**
-  String originalQueryLabel(String query);
-
-  /// Label for the stemmed search query
-  ///
-  /// In en, this message translates to:
-  /// **'Stemmed: {query}'**
-  String stemmedQueryLabel(String query);
-
-  /// Message displayed when no news or Telegram messages are found
-  ///
-  /// In en, this message translates to:
-  /// **'No news or Telegram messages found'**
-  String get noNewsOrMessagesFound;
-
-  /// Label for the total number of articles found
-  ///
-  /// In en, this message translates to:
-  /// **'Found {count} articles'**
-  String totalArticlesLabel(int count);
-
-  /// Label for the total number of Telegram messages found
-  ///
-  /// In en, this message translates to:
-  /// **'Found {count} telegram messages'**
-  String totalTelegramMessagesLabel(int count);
-
-  /// Title of the bookmarks screen
-  ///
-  /// In en: “Bookmarks”
-  /// In am: “መዝግቦች”
-  String get bookmarksTitle;
-
-  /// Message shown when no bookmarks exist
-  ///
-  /// In en: “No bookmarks yet”
-  /// In am: “ምንም መዝግቦች የሉም”
-  String get noBookmarksMessage;
-
-  /// Error text when loading bookmarks fails
-  ///
-  /// In en: “Error loading bookmarks”
-  /// In am: “መዝግቦችን ማስጫን አልተሳካም።”
-  String get errorLoadingBookmarks;
-
-  /// Label for retry button on bookmarks error
-  ///
-  /// In en: “Retry”
-  /// In am: “ዳግም መሞከር”
-  String get retryButton;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -961,26 +795,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['am', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['am', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'am':
-      return AppLocalizationsAm();
-    case 'en':
-      return AppLocalizationsEn();
+    case 'am': return AppLocalizationsAm();
+    case 'en': return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

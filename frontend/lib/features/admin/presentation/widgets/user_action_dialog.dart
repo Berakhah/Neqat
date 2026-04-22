@@ -10,14 +10,14 @@ class UserActionDialog extends StatelessWidget {
   final Color? confirmColor;
   
   const UserActionDialog({
-    Key? key,
+    super.key,
     required this.user,
     required this.title,
     required this.message,
     required this.confirmText,
     required this.onConfirm,
     this.confirmColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

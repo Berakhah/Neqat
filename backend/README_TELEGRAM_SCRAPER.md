@@ -75,10 +75,6 @@ Example:
 ```bash
 python manage.py telegram_scraper --channel techcrunch --limit 20
 ```
-### Run the stemmer
-```bash
- python manage.py build_amh_ir
-```
 
 ### Listen for New Messages
 

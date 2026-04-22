@@ -1,28 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/app/providers/auth_provider.dart';
 import 'package:frontend/app/providers/theme_notifier.dart';
 import 'package:frontend/app/routes.dart';
 import 'package:frontend/app/themes.dart';
-import 'package:frontend/features/auth/data/datasources/auth_api_service.dart';
-import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:frontend/core/presentation/session_timeout_handler.dart';
 import 'package:frontend/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // Add this import
-
-// Define providers for auth services
-final authApiServiceProvider = Provider<AuthApiService>((ref) {
-  return AuthApiService();
-});
-
-final authRepositoryProvider = Provider<AuthRepositoryImpl>((ref) {
-  final authApiService = ref.watch(authApiServiceProvider);
-  return AuthRepositoryImpl(authApiService: authApiService);
-});
+import 'package:frontend/app/security_gate.dart';
 
 // Locale provider to manage the app's language
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
-  return LocaleNotifier();
+  return LocaleNotifier(); 
 });
 
 class LocaleNotifier extends StateNotifier<Locale> {
@@ -44,33 +34,50 @@ class LocaleNotifier extends StateNotifier<Locale> {
 }
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: "api.env");
-  runApp(ProviderScope(child: MyApp()));
+  runApp(
+    SecurityGate(
+      child: ProviderScope(child: MyApp()),
+    ),
+  );
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
-
+  
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  MyAppState createState() => MyAppState();
+}
+
+class MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Check authentication status on app start
+    Future.microtask(() async {
+      await ref.read(authProvider.notifier).checkAuthStatus();
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeNotifierProvider);
     final locale = ref.watch(localeProvider);
 
-    return MaterialApp.router(
-      title: 'Neqat',
-      debugShowCheckedModeBanner: false,
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: themeMode,
-      routerConfig: appRouter,
-      locale: locale,
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+    return SessionTimeoutWrapper(
+      child: MaterialApp.router(
+        title: 'Neqat',
+        debugShowCheckedModeBanner: false,
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: themeMode,
+        routerConfig: appRouter,
+        locale: locale, // Set the app's locale
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     );
   }
 }

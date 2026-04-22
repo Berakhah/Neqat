@@ -8,32 +8,27 @@ import 'package:frontend/features/admin/domain/usecases/approve_comment.dart';
 import 'package:frontend/features/admin/domain/usecases/reject_comment.dart';
 import 'package:frontend/features/admin/domain/usecases/get_pending_comments.dart';
 import 'package:frontend/features/admin/presentation/providers/admin_providers.dart';
-
-// Post moderation provider
-final pendingPostsProvider = StateNotifierProvider<PostModerationController, AsyncValue<List<Post>>>((ref) {
-  final getPendingPosts = ref.watch(getPendingPostsProvider);
-  final approvePost = ref.watch(approvePostProvider);
-  final rejectPost = ref.watch(rejectPostProvider);
-  
-  return PostModerationController(
-    getPendingPosts: getPendingPosts,
-    approvePost: approvePost,
-    rejectPost: rejectPost,
-  );
-});
+import 'package:dartz/dartz.dart';
+import 'package:frontend/shared/domain/error/failure.dart';
 
 class PostModerationController extends StateNotifier<AsyncValue<List<Post>>> {
   final GetPendingPosts _getPendingPosts;
   final ApprovePost _approvePost;
   final RejectPost _rejectPost;
+  final Future<Either<Failure, int>> Function(List<String>) _bulkApprovePosts;
+  final Future<Either<Failure, int>> Function(List<String>, String) _bulkRejectPosts;
   
   PostModerationController({
     required GetPendingPosts getPendingPosts,
     required ApprovePost approvePost,
     required RejectPost rejectPost,
+    required Future<Either<Failure, int>> Function(List<String>) bulkApprovePosts,
+    required Future<Either<Failure, int>> Function(List<String>, String) bulkRejectPosts,
   }) : _getPendingPosts = getPendingPosts,
        _approvePost = approvePost,
        _rejectPost = rejectPost,
+       _bulkApprovePosts = bulkApprovePosts,
+       _bulkRejectPosts = bulkRejectPosts,
        super(const AsyncValue.loading());
   
   Future<void> loadPendingPosts({int page = 1}) async {
@@ -99,33 +94,62 @@ class PostModerationController extends StateNotifier<AsyncValue<List<Post>>> {
     
     return false;
   }
-}
 
-// Comment moderation provider
-final pendingCommentsProvider = StateNotifierProvider<CommentModerationController, AsyncValue<List<Comment>>>((ref) {
-  final getPendingComments = ref.watch(getPendingCommentsProvider);
-  final approveComment = ref.watch(approveCommentProvider);
-  final rejectComment = ref.watch(rejectCommentProvider);
-  
-  return CommentModerationController(
-    getPendingComments: getPendingComments,
-    approveComment: approveComment,
-    rejectComment: rejectComment,
-  );
-});
+  Future<bool> bulkApprovePosts(List<String> ids) async {
+    final result = await _bulkApprovePosts(ids);
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (approvedCount) {
+        if (state is AsyncData<List<Post>>) {
+          final posts = List<Post>.from((state as AsyncData<List<Post>>).value);
+          posts.removeWhere((post) => ids.contains(post.id));
+          state = AsyncValue.data(posts);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> bulkRejectPosts(List<String> ids, String notes) async {
+    final result = await _bulkRejectPosts(ids, notes);
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (rejectedCount) {
+        if (state is AsyncData<List<Post>>) {
+          final posts = List<Post>.from((state as AsyncData<List<Post>>).value);
+          posts.removeWhere((post) => ids.contains(post.id));
+          state = AsyncValue.data(posts);
+        }
+        return true;
+      },
+    );
+  }
+}
 
 class CommentModerationController extends StateNotifier<AsyncValue<List<Comment>>> {
   final GetPendingComments _getPendingComments;
   final ApproveComment _approveComment;
   final RejectComment _rejectComment;
+  final Future<Either<Failure, int>> Function(List<String>) _bulkApproveComments;
+  final Future<Either<Failure, int>> Function(List<String>, String) _bulkRejectComments;
   
   CommentModerationController({
     required GetPendingComments getPendingComments,
     required ApproveComment approveComment,
     required RejectComment rejectComment,
+    required Future<Either<Failure, int>> Function(List<String>) bulkApproveComments,
+    required Future<Either<Failure, int>> Function(List<String>, String) bulkRejectComments,
   }) : _getPendingComments = getPendingComments,
        _approveComment = approveComment,
        _rejectComment = rejectComment,
+       _bulkApproveComments = bulkApproveComments,
+       _bulkRejectComments = bulkRejectComments,
        super(const AsyncValue.loading());
   
   Future<void> loadPendingComments({int page = 1}) async {
@@ -190,5 +214,41 @@ class CommentModerationController extends StateNotifier<AsyncValue<List<Comment>
     }
     
     return false;
+  }
+
+  Future<bool> bulkApproveComments(List<String> ids) async {
+    final result = await _bulkApproveComments(ids);
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (approvedCount) {
+        if (state is AsyncData<List<Comment>>) {
+          final comments = List<Comment>.from((state as AsyncData<List<Comment>>).value);
+          comments.removeWhere((comment) => ids.contains(comment.id));
+          state = AsyncValue.data(comments);
+        }
+        return true;
+      },
+    );
+  }
+
+  Future<bool> bulkRejectComments(List<String> ids, String notes) async {
+    final result = await _bulkRejectComments(ids, notes);
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (rejectedCount) {
+        if (state is AsyncData<List<Comment>>) {
+          final comments = List<Comment>.from((state as AsyncData<List<Comment>>).value);
+          comments.removeWhere((comment) => ids.contains(comment.id));
+          state = AsyncValue.data(comments);
+        }
+        return true;
+      },
+    );
   }
 } 

@@ -12,7 +12,7 @@ class SettingsOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 10.0),
+      margin: const EdgeInsets.only(top: 10.0),
       child: Column(children: listTiles),
     );
   }

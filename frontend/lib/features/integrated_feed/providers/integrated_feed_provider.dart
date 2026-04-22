@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/preferences/presentation/controllers/preferences_controller.dart';
 import 'package:frontend/features/preferences/presentation/providers/preferences_providers.dart';
 
 /// Provider that combines news articles and potentially other feed sources

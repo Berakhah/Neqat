@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend/app/providers/scanner_providers.dart';
 import 'package:frontend/domain/barcode_logic.dart';
 import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/presentation/screens/manual_entry_screen.dart';
-import 'package:frontend/presentation/screens/product_details_screen.dart';
 import 'package:frontend/features/review/domain/entities/product.dart';
 
 class ScannerPage extends ConsumerStatefulWidget {
@@ -215,7 +213,8 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                             color: theme.appBarTheme.iconTheme?.color,
                           ),
                           onPressed: () {
-                            ref.read(flashStateProvider.notifier).state = !isFlashOn;
+                            ref.read(flashStateProvider.notifier).state =
+                                !isFlashOn;
                             if (isLoading) _startScanning();
                           },
                         )
@@ -273,7 +272,8 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                                   textAlign: TextAlign.left,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
                                   ),
                                 ),
                               ),
@@ -284,16 +284,16 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                                 onPressed: () {
                                   context.go('/manualEntry');
                                 },
-                                child: Text(
-                                  l10n.enterCodeButton,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onPrimary,
-                                  ),
-                                ),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 24,
                                     vertical: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.enterCodeButton,
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
                                   ),
                                 ),
                               ),
@@ -323,7 +323,8 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                             l10n.manualEntryNonWebPrompt,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                           )
                         else
@@ -331,7 +332,8 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                             l10n.manualEntryWebPrompt,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                         const SizedBox(height: 16),
@@ -339,16 +341,16 @@ class _ScannerPageState extends ConsumerState<ScannerPage> {
                           onPressed: () {
                             context.go('/manualEntry');
                           },
-                          child: Text(
-                            l10n.enterCodeButton,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                          ),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            l10n.enterCodeButton,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onPrimary,
                             ),
                           ),
                         ),

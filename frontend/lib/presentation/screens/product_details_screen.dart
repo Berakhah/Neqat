@@ -489,7 +489,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         MaterialPageRoute(
                           builder: (context) => const ScannerPage(),
                         ),
-                        (route) => route.isFirst || route.settings.name == '/scanner',
+                        (route) =>
+                            route.isFirst || route.settings.name == '/scanner',
                       );
                     },
                     child: const Text('Scan Another Product'),
@@ -592,7 +593,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.product!.categories ?? 'No category available',
+                            widget.product!.categories ??
+                                'No category available',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black54,
@@ -625,7 +627,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
+                          const Row(
                             children: [
                               // Text(
                               //   widget.product!.rating?.toString() ?? 'Not rated',
@@ -634,8 +636,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               //     color: Colors.black54,
                               //   ),
                               // ),
-                              const SizedBox(width: 8),
-                              const Icon(
+                              SizedBox(width: 8),
+                              Icon(
                                 Icons.star,
                                 color: Colors.amber,
                                 size: 20,
@@ -653,7 +655,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.product!.brands ?? 'No description available',
+                            widget.product!.brands ??
+                                'No description available',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black54,
@@ -732,7 +735,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             Container(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const SizedBox(width: 48),
                                   Row(
@@ -754,7 +758,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.blue,
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           '${_reviews.length}',
@@ -785,7 +790,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             final review = _reviews[index];
                             return ListTile(
                               leading: CircleAvatar(
-                                child: Text(review['avatar']!.isEmpty ? review['name']![0] : ''),
+                                child: Text(review['avatar']!.isEmpty
+                                    ? review['name']![0]
+                                    : ''),
                               ),
                               title: Text(
                                 review['name']!,
@@ -852,7 +859,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           MaterialPageRoute(
                             builder: (context) => const ScannerPage(),
                           ),
-                          (route) => route.isFirst || route.settings.name == '/scanner',
+                          (route) =>
+                              route.isFirst ||
+                              route.settings.name == '/scanner',
                         );
                       },
                       child: const Text(

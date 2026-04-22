@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:frontend/application/data_sources/show_category_news.dart';
 import 'package:frontend/domain/entities/article_model.dart';
 import 'package:frontend/domain/entities/show_category_model.dart';
-import 'package:frontend/presentation/screens/article_view.dart';
 import 'package:frontend/presentation/widgets/blog_tile.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -45,9 +42,9 @@ class _CategoryNewsState extends ConsumerState<CategoryNews> {
         title: Text(
           widget.name,
           style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         centerTitle: true,
         elevation: 0.0,
@@ -111,7 +108,6 @@ class _CategoryNewsState extends ConsumerState<CategoryNews> {
               );
             } else {
               final article = ArticleModel(
-                type: ArticleType.news,
                 author: categories[index].author,
                 content: categories[index].content,
                 title: categories[index].title,

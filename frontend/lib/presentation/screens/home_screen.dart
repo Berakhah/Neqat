@@ -13,13 +13,10 @@ import 'package:frontend/presentation/screens/all_news.dart';
 import 'package:frontend/presentation/screens/article_view.dart';
 import 'package:frontend/presentation/screens/category_news.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:frontend/presentation/widgets/blog_tile.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/features/settings/presentation/providers/user_profile_provider.dart';
+import 'package:frontend/core/presentation/widgets/proxied_network_image.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -35,11 +32,9 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   bool _newsLoading = true;
   String? _errorMessage;
   int _activeIndex = 0;
-  late News newsClass; // Declare newsClass
 
   @override
   void initState() {
-    newsClass = News();
     _initializeData();
     super.initState();
   }
@@ -51,12 +46,14 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     });
     categories = getCategories();
     await Future.wait([_loadSliders(), _loadNews()]);
-    await Future.delayed(Duration(seconds: 2)); // Ensure shimmer visibility
+    await Future.delayed(
+      const Duration(seconds: 2),
+    ); // Ensure shimmer visibility
     if (mounted) {
       setState(() {
         _newsLoading = false;
         if (articles.isEmpty) {
-          _errorMessage = AppLocalizations.of(context)!.failedToLoadNewsError;
+          _errorMessage = 'Failed to load news. Please try again.';
         }
       });
     }
@@ -68,12 +65,12 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       _errorMessage = null;
     });
     await Future.wait([_loadSliders(), _loadNews()]);
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() {
         _newsLoading = false;
         if (articles.isEmpty) {
-          _errorMessage = AppLocalizations.of(context)!.failedToLoadNewsError;
+          _errorMessage = 'Failed to load news. Please try again.';
         }
       });
     }
@@ -86,15 +83,19 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadNews() async {
-    await newsClass.getNews(ref); // Call getNews with ref, no return value
-    final newsArticles = await newsClass.news; // Await news getter
-    articles =
-        newsArticles
-            .where(
-              (article) =>
-                  article.urlToImage != null && article.urlToImage!.isNotEmpty,
-            )
-            .toList();
+    try {
+      final newsDataSource = News();
+      await newsDataSource.getNews(ref);
+      articles = newsDataSource.news
+          .where(
+            (article) =>
+                article.urlToImage != null && article.urlToImage!.isNotEmpty,
+          )
+          .toList();
+    } catch (e) {
+      print('Error fetching news: $e');
+      _errorMessage = 'Failed to load news. Please try again.';
+    }
   }
 
   void _updateLoadingState() {
@@ -108,9 +109,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     final size = MediaQuery.of(context).size;
     final themeMode = ref.watch(themeNotifierProvider);
     final isDark = themeMode == ThemeMode.dark;
-    final userProfileState = ref.watch(userProfileProvider);
-    final user = userProfileState.user;
-
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -126,36 +124,10 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
+                        child: const CircleAvatar(radius: 20),
                         onTap: () {
                           context.push('/profile');
                         },
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.transparent,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(context).colorScheme.primary,
-                                  Theme.of(context).colorScheme.secondary,
-                                ],
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(1.5),
-                              child: CircleAvatar(
-                                radius: 19,
-                                backgroundImage: user?.profile_photo != null && user!.profile_photo!.isNotEmpty
-                                    ? CachedNetworkImageProvider(user.profile_photo!) as ImageProvider
-                                    : null,
-                                child: user?.profile_photo == null || user!.profile_photo!.isEmpty
-                                    ? const Icon(Icons.person, size: 20)
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                     SvgPicture.asset(
@@ -163,9 +135,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                       height: 30.0,
                       width: 30.0,
                     ),
-
                     IconButton(
-                      icon: Icon(Icons.settings),
+                      icon: const Icon(Icons.settings),
                       onPressed: () {
                         ref.read(navigationProvider.notifier).goToPage(3);
                       },
@@ -213,15 +184,13 @@ class AppTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Removed const from text widgets so we can use Theme.of(context)
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        Text("Current on ", style: Theme.of(context).textTheme.titleMedium),
         Text(
-          AppLocalizations.of(context)!.currentOnLabel,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        Text(
-          AppLocalizations.of(context)!.appTitle,
+          "Neqat",
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
@@ -257,33 +226,11 @@ class CategoryList extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemBuilder: (context, index) {
-          // Localize the category name based on the category id
-          String localizedCategoryName = _getLocalizedCategoryName(context, categories[index].name!);
-          return CategoryTile(categoryName: localizedCategoryName);
+          // Use the updated CategoryTile that does NOT show an image.
+          return CategoryTile(categoryName: categories[index].name!);
         },
       ),
     );
-  }
-
-  String _getLocalizedCategoryName(BuildContext context, String categoryId) {
-    switch (categoryId.toLowerCase()) {
-      case 'business':
-        return AppLocalizations.of(context)!.businessCategory;
-      case 'entertainment':
-        return AppLocalizations.of(context)!.entertainmentCategory;
-      case 'general':
-        return AppLocalizations.of(context)!.generalCategory;
-      case 'health':
-        return AppLocalizations.of(context)!.healthCategory;
-      case 'science':
-        return AppLocalizations.of(context)!.scienceCategory;
-      case 'sports':
-        return AppLocalizations.of(context)!.sportsCategory;
-      case 'technology':
-        return AppLocalizations.of(context)!.technologyCategory;
-      default:
-        return categoryId; // Fallback to the original name if not found
-    }
   }
 }
 
@@ -347,42 +294,53 @@ class TopNewsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SectionHeader(
-          title: AppLocalizations.of(context)!.newsTitle(AppLocalizations.of(context)!.topCategory),
-          viewAllRoute: AppLocalizations.of(context)!.topCategory,
-        ),
+        const SectionHeader(title: "Top News", viewAllRoute: "Top"),
         const SizedBox(height: 10),
-        CarouselSlider.builder(
-          itemCount: 6,
-          itemBuilder:
-              (context, index, _) => NewsSliderItem(
-                imageUrl: sliders[index].urlToImage!,
-                title: sliders[index].title!,
-                onTap: () => _handleSliderTap(context, index),
+        sliders.isEmpty
+            ? Container(
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text('No top news available'),
+                ),
+              )
+            : CarouselSlider.builder(
+                itemCount: sliders.length,
+                itemBuilder:
+                    (context, index, _) => NewsSliderItem(
+                      imageUrl: sliders[index].urlToImage ?? '',
+                      title: sliders[index].title ?? 'Untitled',
+                      onTap: () => _handleSliderTap(context, index),
+                    ),
+                options: CarouselOptions(
+                  height: 200,
+                  enlargeCenterPage: true,
+                  autoPlay: true,
+                  onPageChanged: (index, _) => onPageChanged(index),
+                ),
               ),
-          options: CarouselOptions(
-            height: 200,
-            enlargeCenterPage: true,
-            autoPlay: true,
-            onPageChanged: (index, _) => onPageChanged(index),
-          ),
-        ),
         const SizedBox(height: 16),
-        PageIndicator(count: 6, activeIndex: activeIndex),
+        if (sliders.isNotEmpty)
+          PageIndicator(count: sliders.length, activeIndex: activeIndex),
       ],
     );
   }
 
   void _handleSliderTap(BuildContext context, int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ArticleView(blogUrl: sliders[index].url!, title: sliders[index].title ?? ''),
-      ),
-    );
+    if (index < sliders.length && sliders[index].url != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ArticleView(blogUrl: sliders[index].url!),
+        ),
+      );
+    }
   }
 }
-
 
 class TrendingNewsSection extends StatelessWidget {
   final List<ArticleModel> articles;
@@ -392,21 +350,19 @@ class TrendingNewsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SectionHeader(
-          title: AppLocalizations.of(context)!.trendingNewsTitle,
-          viewAllRoute: AppLocalizations.of(context)!.trendingCategory,
-        ),
+        const SectionHeader(title: "Trending News", viewAllRoute: "Trending"),
         const SizedBox(height: 10),
         articles.isEmpty
-            ? Container(
-                height: 200,
-                child: Center(child: Text(AppLocalizations.of(context)!.noTrendingNewsMessage)),
+            ? SizedBox(
+              height: 200,
+              child: const Center(child: Text('No trending news available')),
             )
             : ListView.builder(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                itemCount: articles.length > 15 ? 15 : articles.length,
-                itemBuilder: (context, index) => BlogTile(article: articles[index]),
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
+              itemCount: articles.length > 15 ? 15 : articles.length,
+              itemBuilder:
+                  (context, index) => BlogTile(article: articles[index]),
             ),
       ],
     );
@@ -443,7 +399,7 @@ class SectionHeader extends StatelessWidget {
                   ),
                 ),
             child: Text(
-              AppLocalizations.of(context)!.viewAllLabel,
+              "View all",
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w500,
@@ -474,24 +430,33 @@ class NewsSliderItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: Stack(children: [_buildImage(), _buildTitleOverlay(context)]),
+        child: Stack(children: [_buildImage(context), _buildTitleOverlay(context)]),
       ),
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        height: 200,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        placeholder:
-            (context, url) =>
-                ShimmerLoading(child: Container(color: Colors.grey)),
-        errorWidget: (context, url, error) => Icon(Icons.error),
-      ),
+      child: imageUrl.isNotEmpty 
+          ? ProxiedNetworkImage(
+              imageUrl: imageUrl,
+              height: 200,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              useCache: true,
+              placeholder: ShimmerLoading(child: Container(color: Colors.grey)),
+              errorBuilder: (context, url, error) => Container(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                child: const Icon(Icons.error, size: 40),
+              ),
+            )
+          : Container(
+              height: 200,
+              width: double.infinity,
+              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              child: const Icon(Icons.image_not_supported, size: 40),
+            ),
     );
   }
 

@@ -4,7 +4,7 @@ import 'package:frontend/features/integrated_feed/providers/integrated_feed_prov
 import 'package:frontend/features/integrated_feed/widgets/integrated_feed_card.dart';
 
 class IntegratedFeedScreen extends ConsumerStatefulWidget {
-  const IntegratedFeedScreen({Key? key}) : super(key: key);
+  const IntegratedFeedScreen({super.key});
 
   @override
   ConsumerState<IntegratedFeedScreen> createState() => _IntegratedFeedScreenState();

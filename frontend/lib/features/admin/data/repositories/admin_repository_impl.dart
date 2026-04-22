@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:frontend/shared/domain/utils/either.dart';
+import 'package:dartz/dartz.dart';
 import 'package:frontend/shared/domain/error/failure.dart';
 import 'package:frontend/features/admin/data/datasources/admin_api_service.dart';
 import 'package:frontend/features/admin/data/models/post_model.dart';
@@ -11,6 +11,7 @@ import 'package:frontend/features/admin/domain/entities/comment.dart';
 import 'package:frontend/features/admin/domain/entities/content_flag.dart';
 import 'package:frontend/features/admin/domain/entities/admin_user.dart';
 import 'package:frontend/features/admin/domain/entities/dashboard_metrics.dart';
+import 'package:frontend/features/admin/domain/entities/moderation_history.dart';
 import 'package:frontend/features/admin/domain/repositories/admin_repository.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
@@ -40,7 +41,8 @@ class AdminRepositoryImpl implements AdminRepository {
     } on SocketException {
       return Left(NetworkFailure(message: 'No internet connection'));
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
     }
   }
 
@@ -53,7 +55,8 @@ class AdminRepositoryImpl implements AdminRepository {
     } on SocketException {
       return Left(NetworkFailure(message: 'No internet connection'));
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
     }
   }
 
@@ -79,7 +82,8 @@ class AdminRepositoryImpl implements AdminRepository {
     } on SocketException {
       return Left(NetworkFailure(message: 'No internet connection'));
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
     }
   }
 
@@ -92,7 +96,8 @@ class AdminRepositoryImpl implements AdminRepository {
     } on SocketException {
       return Left(NetworkFailure(message: 'No internet connection'));
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
     }
   }
 
@@ -165,5 +170,65 @@ class AdminRepositoryImpl implements AdminRepository {
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Failure, int>> bulkApprovePosts(List<String> ids) async {
+    try {
+      final result = await adminApiService.bulkApprovePosts(ids);
+      return Right(result['approved'] ?? 0);
+    } catch (e) {
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> bulkRejectPosts(List<String> ids, String notes) async {
+    try {
+      final result = await adminApiService.bulkRejectPosts(ids, notes);
+      return Right(result['rejected'] ?? 0);
+    } catch (e) {
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> bulkApproveComments(List<String> ids) async {
+    try {
+      final result = await adminApiService.bulkApproveComments(ids);
+      return Right(result['approved'] ?? 0);
+    } catch (e) {
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> bulkRejectComments(List<String> ids, String notes) async {
+    try {
+      final result = await adminApiService.bulkRejectComments(ids, notes);
+      return Right(result['rejected'] ?? 0);
+    } catch (e) {
+      String msg = _extractBackendError(e);
+      return Left(ServerFailure(message: msg));
+    }
+  }
+
+  @override
+  Future<List<ModerationHistory>> fetchModerationHistory({required String contentType, required String contentId}) async {
+    final records = await adminApiService.fetchModerationHistory(contentType: contentType, contentId: contentId);
+    return records.map((json) => ModerationHistory.fromJson(json)).toList();
+  }
+
+  String _extractBackendError(Object e) {
+    final msg = e.toString();
+    // Try to extract the backend error message if present in Exception('...')
+    final match = RegExp(r"Exception: (.*)").firstMatch(msg);
+    if (match != null && match.groupCount > 0) {
+      return match.group(1)!;
+    }
+    return msg;
   }
 } 

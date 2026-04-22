@@ -4,13 +4,13 @@ class MetricsDataTable extends StatelessWidget {
   final List<Map<String, dynamic>> data;
   final List<String> columns;
   final List<String> valueFields;
-  
+
   const MetricsDataTable({
-    Key? key,
+    super.key,
     required this.data,
     required this.columns,
     required this.valueFields,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class MetricsDataTable extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowColor: MaterialStateProperty.all(
+          headingRowColor: WidgetStateProperty.all(
             Theme.of(context).primaryColor.withOpacity(0.1),
           ),
           columnSpacing: 24,
@@ -51,4 +51,4 @@ class MetricsDataTable extends StatelessWidget {
       ),
     );
   }
-} 
+}

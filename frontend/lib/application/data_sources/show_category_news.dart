@@ -17,7 +17,7 @@ class ShowCategoryNews {
     }
     String url = '$baseUrl/api/news/?tags=${category.toLowerCase()}';
     try {
-      String? token = ref.read(authProvider);
+      String? token = ref.read(authTokenProvider);
       if (token == null) {
         final prefs = await SharedPreferences.getInstance();
         token = prefs.getString('access_token');

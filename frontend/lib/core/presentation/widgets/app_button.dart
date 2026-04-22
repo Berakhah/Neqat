@@ -10,7 +10,7 @@ class AppButton extends StatelessWidget {
   final Color? textColor;
   
   const AppButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.onPressed,
     this.isLoading = false,
@@ -18,7 +18,7 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.textColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/admin/presentation/providers/admin_providers.dart';
 
 class AdminSettingsPage extends ConsumerStatefulWidget {
-  const AdminSettingsPage({Key? key}) : super(key: key);
+  const AdminSettingsPage({super.key});
 
   @override
   ConsumerState<AdminSettingsPage> createState() => _AdminSettingsPageState();
@@ -15,16 +16,80 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
   bool _enableSocialLogin = true;
   bool _enableEmailNotifications = true;
   String _moderationLevel = 'Medium';
-  
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSettings();
+  }
+
+  Future<void> _fetchSettings() async {
+    setState(() => _loading = true);
+    try {
+      final api = ref.read(adminApiServiceProvider);
+      final settings = await api.getAdminSettings();
+      setState(() {
+        _autoApproveContent = settings['auto_approve_content'] == true || settings['auto_approve_content'] == 'true';
+        _enableUserRegistration = settings['enable_user_registration'] == true || settings['enable_user_registration'] == 'true';
+        _enableSocialLogin = settings['enable_social_login'] == true || settings['enable_social_login'] == 'true';
+        _enableEmailNotifications = settings['enable_email_notifications'] == true || settings['enable_email_notifications'] == 'true';
+        _moderationLevel = settings['moderation_level'] ?? 'Medium';
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load settings: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    setState(() => _saving = true);
+    try {
+      final api = ref.read(adminApiServiceProvider);
+      await api.updateAdminSettings({
+        'auto_approve_content': _autoApproveContent,
+        'enable_user_registration': _enableUserRegistration,
+        'enable_social_login': _enableSocialLogin,
+        'enable_email_notifications': _enableEmailNotifications,
+        'moderation_level': _moderationLevel,
+      });
+      setState(() => _saving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Settings saved successfully'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      setState(() => _saving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save settings: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Admin Settings')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Settings'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveSettings,
+            icon: _saving ? CircularProgressIndicator(color: Colors.white) : const Icon(Icons.save),
+            onPressed: _saving ? null : _saveSettings,
             tooltip: 'Save Settings',
           ),
         ],
@@ -42,7 +107,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Content Settings
             const Text(
               'Content Settings',
@@ -53,7 +118,8 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
             ),
             SwitchListTile(
               title: const Text('Auto-approve content'),
-              subtitle: const Text('Automatically approve new posts and comments'),
+              subtitle:
+                  const Text('Automatically approve new posts and comments'),
               value: _autoApproveContent,
               onChanged: (value) {
                 setState(() {
@@ -61,11 +127,12 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                 });
               },
             ),
-            
+
             // Dropdown for moderation level
             ListTile(
               title: const Text('Moderation level'),
-              subtitle: const Text('Set the sensitivity level for content moderation'),
+              subtitle: const Text(
+                  'Set the sensitivity level for content moderation'),
               trailing: DropdownButton<String>(
                 value: _moderationLevel,
                 onChanged: (String? newValue) {
@@ -84,9 +151,9 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                 }).toList(),
               ),
             ),
-            
+
             const Divider(),
-            
+
             // User Settings
             const Text(
               'User Settings',
@@ -115,9 +182,9 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                 });
               },
             ),
-            
+
             const Divider(),
-            
+
             // Notification Settings
             const Text(
               'Notification Settings',
@@ -136,9 +203,9 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                 });
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Admin actions
             const Text(
               'Admin Actions',
@@ -180,18 +247,9 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
       ),
     );
   }
-  
-  void _saveSettings() {
-    // Here you would implement the actual saving logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Settings saved successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-  
-  void _showConfirmDialog(String title, String message, VoidCallback onConfirm) {
+
+  void _showConfirmDialog(
+      String title, String message, VoidCallback onConfirm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -207,16 +265,16 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
               Navigator.of(context).pop();
               onConfirm();
             },
-            child: const Text('Confirm'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
+            child: const Text('Confirm'),
           ),
         ],
       ),
     );
   }
-  
+
   void _clearSystemLogs() {
     // Here you would implement the actual clearing logic
     ScaffoldMessenger.of(context).showSnackBar(
@@ -226,7 +284,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
       ),
     );
   }
-  
+
   void _resetContentFlags() {
     // Here you would implement the actual reset logic
     ScaffoldMessenger.of(context).showSnackBar(
@@ -236,4 +294,4 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
       ),
     );
   }
-} 
+}

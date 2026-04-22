@@ -1,0 +1,18 @@
+[
+  {
+    "index_name": "PK__api_neqa__3213E83F98C7E7EA",
+    "column_name": "id"
+  },
+  {
+    "index_name": "UQ__api_neqa__7C9273C4A8CA50CD",
+    "column_name": "user_name"
+  },
+  {
+    "index_name": "api_neqatuser_email_7ae552bc_uniq",
+    "column_name": "email"
+  },
+  {
+    "index_name": "neqat_neqatuser_keycloak_id_19b53b23_uniq",
+    "column_name": "keycloak_id"
+  }
+]

@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/presentation/theme/app_colors.dart';
 import '../../../../core/presentation/widgets/app_bar_back_button.dart';
 import '../../../../core/presentation/widgets/app_button.dart';
 import '../../../../core/presentation/widgets/shimmer_loading.dart';
-import '../../../../core/domain/entities/tag.dart';
 import '../controllers/preferences_controller.dart';
 import '../widgets/preference_slider.dart';
 
 class PreferencesPage extends ConsumerStatefulWidget {
   static const routeName = '/preferences';
 
-  const PreferencesPage({Key? key}) : super(key: key);
+  const PreferencesPage({super.key});
 
   @override
   ConsumerState<PreferencesPage> createState() => _PreferencesPageState();
@@ -42,12 +40,15 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
   Future<void> _savePreferences() async {
     if (_updatedPreferences.isEmpty) return;
 
-    final updates = _updatedPreferences.entries.map((entry) => {
-      'tagId': entry.key,
-      'preferenceLevel': entry.value,
-    }).toList();
+    final updates = _updatedPreferences.entries
+        .map((entry) => {
+              'tagId': entry.key,
+              'preferenceLevel': entry.value,
+            })
+        .toList();
 
-    await ref.read(preferencesControllerProvider.notifier)
+    await ref
+        .read(preferencesControllerProvider.notifier)
         .updateMultiplePreferences(updates);
 
     setState(() {
@@ -66,20 +67,18 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
   Widget build(BuildContext context) {
     final tagsState = ref.watch(tagsControllerProvider);
     final preferencesState = ref.watch(preferencesControllerProvider);
-    
+
     final isLoading = tagsState.isLoading || preferencesState.isLoading;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Content Preferences'),
         leading: const AppBarBackButton(),
       ),
-      body: isLoading 
+      body: isLoading
           ? _buildLoadingView()
           : _buildContentView(tagsState, preferencesState),
-      bottomNavigationBar: _hasChanges 
-          ? _buildSaveButton()
-          : null,
+      bottomNavigationBar: _hasChanges ? _buildSaveButton() : null,
     );
   }
 
@@ -105,15 +104,16 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
     );
   }
 
-  Widget _buildContentView(TagsState tagsState, PreferencesState preferencesState) {
+  Widget _buildContentView(
+      TagsState tagsState, PreferencesState preferencesState) {
     if (tagsState.error != null) {
       return Center(child: Text('Error: ${tagsState.error}'));
     }
-    
+
     if (preferencesState.error != null) {
       return Center(child: Text('Error: ${preferencesState.error}'));
     }
-    
+
     if (tagsState.tags.isEmpty) {
       return const Center(child: Text('No tags available'));
     }
@@ -141,7 +141,7 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
           final currentPreference = _updatedPreferences.containsKey(tag.id)
               ? _updatedPreferences[tag.id]!
               : preferencesState.getPreferenceForTag(tag.id);
-              
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: PreferenceSlider(
@@ -150,7 +150,7 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
               onChanged: (value) => _updatePreference(tag.id, value),
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(height: 16),
       ],
     );
@@ -168,4 +168,4 @@ class _PreferencesPageState extends ConsumerState<PreferencesPage> {
       ),
     );
   }
-} 
+}

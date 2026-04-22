@@ -6,7 +6,7 @@ import '../providers/preferences_providers.dart';
 import '../controllers/preferences_controller.dart';
 
 class PersonalizedContentScreen extends ConsumerStatefulWidget {
-  const PersonalizedContentScreen({Key? key}) : super(key: key);
+  const PersonalizedContentScreen({super.key});
 
   @override
   ConsumerState<PersonalizedContentScreen> createState() => _PersonalizedContentScreenState();

@@ -10,6 +10,8 @@ import 'package:frontend/app/providers/auth_provider.dart';
 class Sliders extends ConsumerWidget {
   List<SliderModel> sliders = [];
 
+  Sliders({super.key});
+
   Future<void> getSliders(WidgetRef ref) async {
     String? baseUrl = dotenv.env['django_api'];
     if (baseUrl == null) {
@@ -18,7 +20,7 @@ class Sliders extends ConsumerWidget {
     }
     String url = '$baseUrl/api/news/?tags=top_headlines';
     try {
-      String? token = ref.read(authProvider);
+      String? token = ref.read(authTokenProvider);
       if (token == null) {
         final prefs = await SharedPreferences.getInstance();
         token = prefs.getString('access_token');
@@ -33,7 +35,9 @@ class Sliders extends ConsumerWidget {
 
       sliders.clear();
       int page = 1;
-      while (url != null) {
+      bool hasMorePages = true;
+      
+      while (hasMorePages && url.isNotEmpty) {
         print('Fetching page $page from: $url');
         var response = await http.get(
           Uri.parse(url),
@@ -53,21 +57,21 @@ class Sliders extends ConsumerWidget {
           }
           print('Results count: ${jsonData['results'].length}');
           for (var element in jsonData['results']) {
+            if (element == null) continue;
+            
             print('Processing article: ${element['title'] ?? 'No title'}');
             // Relaxed validation to include articles with missing fields
             if (element['title'] != null) {
               SliderModel sliderModel = SliderModel(
                 author: element['author'] ?? 'Unknown',
                 title: element['title'] ?? 'Untitled',
-                description:
-                    element['content'] ??
+                description: element['content'] ??
                     element['description'] ??
                     'No description',
                 url: element['url'] ?? '',
-                urlToImage:
-                    element['image_url']?.isNotEmpty == true
-                        ? element['image_url']
-                        : '',
+                urlToImage: element['image_url'] != null && element['image_url'].toString().isNotEmpty 
+                    ? element['image_url'].toString()
+                    : '',
                 content: element['content'] ?? 'No content',
               );
               sliders.add(sliderModel);
@@ -76,8 +80,16 @@ class Sliders extends ConsumerWidget {
               print('Skipped article: Missing title');
             }
           }
-          url = jsonData['next'];
-          page++;
+          
+          // Check if there are more pages
+          final nextUrl = jsonData['next'];
+          if (nextUrl == null || nextUrl.toString().isEmpty) {
+            hasMorePages = false;
+            break;
+          } else {
+            url = nextUrl.toString();
+            page++;
+          }
         } else if (response.statusCode == 401) {
           print('Unauthorized: Invalid or expired token');
           throw Exception('Authentication failed: ${response.statusCode}');

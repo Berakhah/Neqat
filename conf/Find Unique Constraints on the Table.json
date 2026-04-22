@@ -1,0 +1,6 @@
+[
+  {
+    "constraint_name": "UQ__api_neqa__7C9273C4A8CA50CD",
+    "column_name": "user_name"
+  }
+]
