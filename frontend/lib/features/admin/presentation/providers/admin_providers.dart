@@ -12,6 +12,11 @@ import 'package:frontend/features/admin/domain/usecases/get_unresolved_flags.dar
 import 'package:frontend/features/admin/domain/usecases/reject_comment.dart';
 import 'package:frontend/features/admin/domain/usecases/reject_post.dart';
 import 'package:frontend/features/admin/domain/usecases/resolve_content_flag.dart';
+import 'package:frontend/features/admin/presentation/controllers/content_moderation_controller.dart';
+import 'package:frontend/features/admin/domain/entities/post.dart';
+import 'package:frontend/features/admin/domain/entities/comment.dart';
+import 'package:dartz/dartz.dart';
+import 'package:frontend/shared/domain/error/failure.dart';
 
 // DioClient Provider
 final dioClientProvider = Provider<DioClient>((ref) {
@@ -74,4 +79,34 @@ final resolveContentFlagProvider = Provider<ResolveContentFlag>((ref) {
 final getDashboardDataProvider = Provider<GetDashboardData>((ref) {
   final repository = ref.watch(adminRepositoryProvider);
   return GetDashboardData(repository);
+});
+
+final pendingPostsProvider = StateNotifierProvider<PostModerationController, AsyncValue<List<Post>>>((ref) {
+  final getPendingPosts = ref.watch(getPendingPostsProvider);
+  final approvePost = ref.watch(approvePostProvider);
+  final rejectPost = ref.watch(rejectPostProvider);
+  final bulkApprovePosts = ref.watch(adminRepositoryProvider).bulkApprovePosts;
+  final bulkRejectPosts = ref.watch(adminRepositoryProvider).bulkRejectPosts;
+  return PostModerationController(
+    getPendingPosts: getPendingPosts,
+    approvePost: approvePost,
+    rejectPost: rejectPost,
+    bulkApprovePosts: bulkApprovePosts,
+    bulkRejectPosts: bulkRejectPosts,
+  );
+});
+
+final pendingCommentsProvider = StateNotifierProvider<CommentModerationController, AsyncValue<List<Comment>>>((ref) {
+  final getPendingComments = ref.watch(getPendingCommentsProvider);
+  final approveComment = ref.watch(approveCommentProvider);
+  final rejectComment = ref.watch(rejectCommentProvider);
+  final bulkApproveComments = ref.watch(adminRepositoryProvider).bulkApproveComments;
+  final bulkRejectComments = ref.watch(adminRepositoryProvider).bulkRejectComments;
+  return CommentModerationController(
+    getPendingComments: getPendingComments,
+    approveComment: approveComment,
+    rejectComment: rejectComment,
+    bulkApproveComments: bulkApproveComments,
+    bulkRejectComments: bulkRejectComments,
+  );
 }); 

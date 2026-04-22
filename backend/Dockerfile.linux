@@ -1,0 +1,61 @@
+# Use Python 3.11 slim image
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=backend.settings \
+    ACCEPT_EULA=Y \
+    PYTHONPATH=/app
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies with careful cleanup to reduce image size
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg \
+    curl \
+    apt-transport-https \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends \
+    unixodbc \
+    unixodbc-dev \
+    msodbcsql18 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symbolic link to ensure the driver is found at the expected path
+RUN mkdir -p /opt/microsoft/msodbcsql18/lib64 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libmsodbcsql-18.*.so.* /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.3.so.2.1
+
+# Configure ODBC driver
+RUN echo "[ODBC Driver 18 for SQL Server]\nDriver=/usr/lib/x86_64-linux-gnu/libmsodbcsql-18.3.so.2.1\nThreading=1\n" > /etc/odbcinst.ini
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy project files
+COPY . .
+
+# Create necessary directories for static files and media
+RUN mkdir -p staticfiles Images && \
+    chmod -R 755 staticfiles Images
+
+# Set proper permissions
+RUN chmod +x scripts/*.sh
+
+# Expose port
+EXPOSE 8000
+
+# Healthcheck to help diagnose connection issues
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Run Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"] 

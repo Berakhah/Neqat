@@ -19,7 +19,7 @@ def create_tables(apps, schema_editor):
             user_name NVARCHAR(50) NOT NULL UNIQUE,
             first_name NVARCHAR(50) NULL,
             last_name NVARCHAR(50) NULL,
-            email NVARCHAR(255) NOT NULL UNIQUE,
+            email NVARCHAR(255) NOT NULL,
             date_joined DATETIME NOT NULL,
             is_active BIT NOT NULL DEFAULT 1,
             is_staff BIT NOT NULL DEFAULT 0,

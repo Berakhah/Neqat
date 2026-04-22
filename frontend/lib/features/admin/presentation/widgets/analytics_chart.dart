@@ -6,11 +6,11 @@ class AnalyticsChart extends StatelessWidget {
   final Color color;
 
   const AnalyticsChart({
-    Key? key,
+    super.key,
     required this.data,
     required this.label,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,8 @@ class AnalyticsChart extends StatelessWidget {
                   data: data,
                   color: color,
                   backgroundColor: Theme.of(context).cardColor,
-                  textColor: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black54,
+                  textColor: Theme.of(context).textTheme.bodyMedium?.color ??
+                      Colors.black54,
                 ),
               );
             },
@@ -79,8 +80,8 @@ class _ChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double width = size.width;
     final double height = size.height;
-    final double bottomPadding = 20;
-    final double leftPadding = 30;
+    const double bottomPadding = 20;
+    const double leftPadding = 30;
     final double chartHeight = height - bottomPadding;
     final double chartWidth = width - leftPadding;
 
@@ -102,7 +103,7 @@ class _ChartPainter extends CustomPainter {
     final double scale = maxValue > 0 ? chartHeight / maxValue : 1;
 
     // Draw horizontal grid lines and value labels
-    final int numGridLines = 5;
+    const int numGridLines = 5;
     for (int i = 0; i <= numGridLines; i++) {
       final double y = chartHeight - (i * chartHeight / numGridLines);
       canvas.drawLine(
@@ -161,7 +162,7 @@ class _ChartPainter extends CustomPainter {
     for (int i = 0; i < data.length; i++) {
       final double x = leftPadding + (i * chartWidth / (data.length - 1));
       final double y = chartHeight - data[i] * scale;
-      
+
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -196,4 +197,4 @@ class _ChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-} 
+}

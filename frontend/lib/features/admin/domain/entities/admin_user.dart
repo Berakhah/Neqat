@@ -1,4 +1,3 @@
-import 'package:frontend/features/auth/domain/entities/user.dart';
 
 class AdminUser {
   final String id;

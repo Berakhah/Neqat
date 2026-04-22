@@ -32,6 +32,16 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/build/web/
+
+# Generated localization files
+frontend/lib/l10n/app_localizations_*.dart
+frontend/lib/l10n/generated/
+frontend/lib/gen_l10n/
 
 # Symbolication related
 app.*.symbols
@@ -44,12 +54,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Environment and local files
 venv/
-*.env
-#ignore session files as they are confidential.
-*.session
-*.joblib
-translate-key.json
-pr_curve*.png
-f1_curve*.png
-scaled_*.jpg
+api.env
+__pycache__/
+*.py[cod]
+*$py.class

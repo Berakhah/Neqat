@@ -4,9 +4,9 @@ class RecentActivityList extends StatelessWidget {
   final List<Map<String, dynamic>> activities;
 
   const RecentActivityList({
-    Key? key,
+    super.key,
     required this.activities,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

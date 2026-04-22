@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4a6cf7;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #3451d1;
+        }
+        .note {
+            margin-top: 20px;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Verify Your Email</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ user.username }},</p>
+            
+            <p>Thank you for registering with Neqat! Please click the button below to verify your email address:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ verification_url }}" class="button">Verify Email</a>
+            </div>
+            
+            <p class="note">This link will expire in 24 hours. If you didn't create a Neqat account, please ignore this email.</p>
+            
+            <p>Best regards,<br>The Neqat Team</p>
+        </div>
+        <div class="footer">
+            <p>© {% now "Y" %} Neqat. All rights reserved.</p>
+            <p>This is an automated email. Please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html> 

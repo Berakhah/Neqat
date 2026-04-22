@@ -20,9 +20,7 @@ abstract class AuthRepository {
   });
 
   // Request password reset
-  Future<Map<String, dynamic>> requestPasswordReset({
-    required String email,
-  });
+  Future<Map<String, dynamic>> requestPasswordReset({required String email});
 
   // Reset password with verification code
   Future<Map<String, dynamic>> resetPassword({
@@ -31,7 +29,7 @@ abstract class AuthRepository {
   });
 
   // Logout user
-  Future<void> logout();
+  Future<bool> logout();
 
   // Get current user information
   Future<Map<String, dynamic>?> getUserProfile();

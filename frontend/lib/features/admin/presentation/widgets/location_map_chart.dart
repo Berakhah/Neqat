@@ -4,9 +4,9 @@ class LocationMapChart extends StatelessWidget {
   final Map<String, int> locationData;
   
   const LocationMapChart({
-    Key? key,
+    super.key,
     required this.locationData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

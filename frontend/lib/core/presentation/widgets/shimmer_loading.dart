@@ -6,11 +6,11 @@ class ShimmerLoading extends StatelessWidget {
   final Widget? placeholder;
 
   const ShimmerLoading({
-    Key? key,
+    super.key,
     required this.isLoading,
     required this.child,
     this.placeholder,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +32,9 @@ class ShimmerEffect extends StatefulWidget {
   final Widget child;
 
   const ShimmerEffect({
-    Key? key,
+    super.key,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   State<ShimmerEffect> createState() => _ShimmerEffectState();

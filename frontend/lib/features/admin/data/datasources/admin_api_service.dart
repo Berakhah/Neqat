@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:dio/dio.dart';
 import 'package:frontend/core/network/dio_client.dart';
 import 'package:frontend/features/admin/domain/entities/dashboard_metrics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,8 +12,15 @@ final adminApiServiceProvider = Provider<AdminApiService>((ref) {
   return AdminApiService();
 });
 
+class AuditLogException implements Exception {
+  final String message;
+  AuditLogException(this.message);
+  @override
+  String toString() => message;
+}
+
 class AdminApiService {
-  final String baseUrl = 'http://localhost:8000/api/';
+  final String baseUrl = 'https://localhost:8000/api/';
   final logger = Logger();
   final _storage = const FlutterSecureStorage();
   final _logger = Logger();
@@ -55,34 +60,70 @@ class AdminApiService {
   Future<Map<String, dynamic>> approvePost(String postId, {String? notes}) async {
     final headers = await _getHeaders();
     final uri = Uri.parse('${baseUrl}admin/posts/$postId/approve/');
-    
     final response = await http.post(
       uri,
       headers: headers,
       body: json.encode({'notes': notes}),
     );
-    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to approve post: ${response.statusCode}');
+      String errorMsg = 'Failed to approve post: \\${response.statusCode}';
+      try {
+        final data = json.decode(response.body);
+        if (data is Map && data['error'] != null) {
+          errorMsg = data['error'];
+        }
+      } catch (_) {}
+      throw Exception(errorMsg);
     }
   }
 
   Future<Map<String, dynamic>> rejectPost(String postId, {required String notes}) async {
     final headers = await _getHeaders();
     final uri = Uri.parse('${baseUrl}admin/posts/$postId/reject/');
-    
     final response = await http.post(
       uri,
       headers: headers,
       body: json.encode({'notes': notes}),
     );
-    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to reject post: ${response.statusCode}');
+      String errorMsg = 'Failed to reject post: \\${response.statusCode}';
+      try {
+        final data = json.decode(response.body);
+        if (data is Map && data['error'] != null) {
+          errorMsg = data['error'];
+        }
+      } catch (_) {}
+      throw Exception(errorMsg);
+    }
+  }
+
+  Future<void> deletePost(String postId, {bool admin = false}) async {
+    final headers = await _getHeaders();
+    final url = admin
+        ? '${baseUrl}admin/posts/$postId/'
+        : '${baseUrl}posts/$postId/';
+    final response = await http.delete(Uri.parse(url), headers: headers);
+    if (response.statusCode != 204) {
+      throw Exception('Failed to delete post: \\${response.statusCode}');
+    }
+  }
+
+  Future<void> editPost(String postId, Map<String, dynamic> data, {bool admin = false}) async {
+    final headers = await _getHeaders();
+    final url = admin
+        ? '${baseUrl}admin/posts/$postId/'
+        : '${baseUrl}posts/$postId/';
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: headers,
+      body: json.encode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to edit post: \\${response.statusCode}');
     }
   }
 
@@ -110,34 +151,44 @@ class AdminApiService {
   Future<Map<String, dynamic>> approveComment(String commentId, {String? notes}) async {
     final headers = await _getHeaders();
     final uri = Uri.parse('${baseUrl}admin/comments/$commentId/approve/');
-    
     final response = await http.post(
       uri,
       headers: headers,
       body: json.encode({'notes': notes}),
     );
-    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to approve comment: ${response.statusCode}');
+      String errorMsg = 'Failed to approve comment: \\${response.statusCode}';
+      try {
+        final data = json.decode(response.body);
+        if (data is Map && data['error'] != null) {
+          errorMsg = data['error'];
+        }
+      } catch (_) {}
+      throw Exception(errorMsg);
     }
   }
 
   Future<Map<String, dynamic>> rejectComment(String commentId, {required String notes}) async {
     final headers = await _getHeaders();
     final uri = Uri.parse('${baseUrl}admin/comments/$commentId/reject/');
-    
     final response = await http.post(
       uri,
       headers: headers,
       body: json.encode({'notes': notes}),
     );
-    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to reject comment: ${response.statusCode}');
+      String errorMsg = 'Failed to reject comment: \\${response.statusCode}';
+      try {
+        final data = json.decode(response.body);
+        if (data is Map && data['error'] != null) {
+          errorMsg = data['error'];
+        }
+      } catch (_) {}
+      throw Exception(errorMsg);
     }
   }
 
@@ -574,32 +625,196 @@ class AdminApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getSystemLogs({int page = 1}) async {
+  Future<List<Map<String, dynamic>>> getSystemLogs({
+    int page = 1,
+    String? action,
+    String? username,
+    String? startDate,
+    String? endDate,
+  }) async {
     try {
       final headers = await _getHeaders();
-      final response = await http.get(
-        Uri.parse('${baseUrl}admin/logs/?page=$page'),
-        headers: headers,
-      );
-
+      final queryParams = {
+        'page': page.toString(),
+        if (action != null && action.isNotEmpty) 'action': action,
+        if (username != null && username.isNotEmpty) 'username': username,
+        if (startDate != null && startDate.isNotEmpty) 'start_date': startDate,
+        if (endDate != null && endDate.isNotEmpty) 'end_date': endDate,
+      };
+      final uri = Uri.parse('${baseUrl}admin/logs/').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: headers);
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         if (responseData is Map && responseData.containsKey('results')) {
-          // Handle paginated response
           return List<Map<String, dynamic>>.from(responseData['results']);
         } else if (responseData is List) {
-          // Handle direct list response
           return List<Map<String, dynamic>>.from(responseData);
         } else {
-          _logger.d('Unexpected logs response format: ${response.body}');
-          return [];
+          throw AuditLogException('Unexpected logs response format');
         }
       } else {
-        throw Exception('Failed to load system logs: ${response.statusCode}');
+        throw AuditLogException('Failed to load system logs: ${response.statusCode}');
       }
     } catch (e) {
       _logger.e('Failed to get system logs', error: e);
-      throw Exception('Could not load system logs: $e');
+      throw AuditLogException('Could not load system logs: $e');
+    }
+  }
+
+  Future<String> exportSystemLogs({String format = 'csv'}) async {
+    // Implement export logic (CSV/JSON) and return file path or download URL
+    // ...
+    throw UnimplementedError('Export not implemented yet');
+  }
+
+  Future<Map<String, dynamic>> bulkApprovePosts(List<String> ids) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/posts/bulk_approve/');
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode({'ids': ids}),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to bulk approve posts: \\${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> bulkRejectPosts(List<String> ids, String notes) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/posts/bulk_reject/');
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode({'ids': ids, 'notes': notes}),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to bulk reject posts: \\${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> bulkApproveComments(List<String> ids) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/comments/bulk_approve/');
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode({'ids': ids}),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to bulk approve comments: \\${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> bulkRejectComments(List<String> ids, String notes) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/comments/bulk_reject/');
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode({'ids': ids, 'notes': notes}),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to bulk reject comments: \\${response.statusCode}');
+    }
+  }
+
+  // Admin Settings API methods
+  Future<Map<String, dynamic>> getAdminSettings() async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/settings/');
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to fetch admin settings: \\${response.statusCode}');
+    }
+  }
+
+  Future<void> updateAdminSettings(Map<String, dynamic> settings) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/settings/');
+    final response = await http.patch(
+      uri,
+      headers: headers,
+      body: json.encode(settings),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update admin settings: \\${response.statusCode}');
+    }
+  }
+
+  // Notification API methods
+  Future<String> createNotification(Map<String, dynamic> data) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}notifications/');
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode(data),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final resp = json.decode(response.body);
+      return resp['id'] as String;
+    } else {
+      throw Exception('Failed to create notification: \\${response.statusCode}');
+    }
+  }
+
+  Future<void> sendNotification(String notificationId) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}notifications/$notificationId/send/');
+    final response = await http.post(uri, headers: headers);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send notification: \\${response.statusCode}');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getNotifications() async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}notifications/');
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data is Map && data.containsKey('results')) {
+        return List<Map<String, dynamic>>.from(data['results']);
+      } else {
+        return [];
+      }
+    } else {
+      throw Exception('Failed to fetch notifications: \\${response.statusCode}');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchModerationHistory({required String contentType, required String contentId}) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${baseUrl}admin/moderation-history/')
+        .replace(queryParameters: {
+          'content_type': contentType,
+          'content_id': contentId,
+        });
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data is Map && data.containsKey('results')) {
+        return List<Map<String, dynamic>>.from(data['results']);
+      } else {
+        return [];
+      }
+    } else {
+      throw Exception('Failed to fetch moderation history: \\${response.statusCode}');
     }
   }
 } 

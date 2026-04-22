@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:frontend/core/constants/api_constants.dart';
+import 'package:frontend/services/keycloak_service.dart';
 
 class ApiClient {
   final http.Client _client;
@@ -17,25 +18,25 @@ class ApiClient {
 
   // Get auth token
   Future<String?> _getToken() async {
-    return await _secureStorage.read(key: 'access_token');
+    return await _secureStorage.read(key: KeycloakStorageKeys.accessToken);
   }
 
   // Get refresh token
   Future<String?> _getRefreshToken() async {
-    return await _secureStorage.read(key: 'refresh_token');
+    return await _secureStorage.read(key: KeycloakStorageKeys.refreshToken);
   }
 
   // Save tokens
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
-    await _secureStorage.write(key: 'access_token', value: accessToken);
-    await _secureStorage.write(key: 'refresh_token', value: refreshToken);
+    await _secureStorage.write(key: KeycloakStorageKeys.accessToken, value: accessToken);
+    await _secureStorage.write(key: KeycloakStorageKeys.refreshToken, value: refreshToken);
     _logger.i("Auth tokens saved successfully");
   }
 
   // Remove tokens
   Future<void> _removeTokens() async {
-    await _secureStorage.delete(key: 'access_token');
-    await _secureStorage.delete(key: 'refresh_token');
+    await _secureStorage.delete(key: KeycloakStorageKeys.accessToken);
+    await _secureStorage.delete(key: KeycloakStorageKeys.refreshToken);
     _logger.i("Auth tokens removed");
   }
 
@@ -62,14 +63,43 @@ class ApiClient {
       final response = await _client.post(
         Uri.parse(ApiConstants.tokenRefresh),
         headers: ApiConstants.defaultHeaders,
-        body: json.encode({'refresh': refreshToken}),
+        body: json.encode({'refresh_token': refreshToken}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        await _saveTokens(data['access'], data['refresh']);
-        return true;
+        // Handle Keycloak token format
+        final accessToken = data['access'] ?? data['access_token'];
+        final newRefreshToken = data['refresh_token'] ?? data['refresh'];
+        
+        if (accessToken != null && newRefreshToken != null) {
+          await _saveTokens(accessToken, newRefreshToken);
+          
+          // Save expiry if provided
+          if (data.containsKey('expires_at')) {
+            await _secureStorage.write(
+              key: KeycloakStorageKeys.tokenExpiry,
+              value: data['expires_at'].toString()
+            );
+          } else if (data.containsKey('expires_in')) {
+            // Calculate expiry from expires_in
+            final expiresAt = DateTime.now().add(
+              Duration(seconds: data['expires_in'])
+            ).millisecondsSinceEpoch ~/ 1000;
+            await _secureStorage.write(
+              key: KeycloakStorageKeys.tokenExpiry,
+              value: expiresAt.toString()
+            );
+          }
+          
+          return true;
+        }
+        
+        _logger.w("Token refresh response missing tokens");
+        return false;
       }
+      
+      _logger.e("Token refresh failed with status: ${response.statusCode}");
       return false;
     } catch (e) {
       _logger.e("Token refresh failed", error: e);

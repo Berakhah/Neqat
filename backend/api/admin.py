@@ -118,6 +118,14 @@ class SystemLogAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'user__user_name', 'action', 'details')
     readonly_fields = ('user', 'action', 'details', 'timestamp', 'ip_address', 'user_agent')
     date_hierarchy = 'timestamp'
+    def has_delete_permission(self, request, obj=None):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request):
+        return False
+    # Add a comment for future maintainers
+    # SystemLog is append-only and must not be edited or deleted from the admin.
 
 # User Activity Admin
 class UserActivityAdmin(admin.ModelAdmin):

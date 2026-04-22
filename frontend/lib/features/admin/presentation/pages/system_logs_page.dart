@@ -4,13 +4,19 @@ import 'package:intl/intl.dart';
 import 'package:frontend/features/admin/data/datasources/admin_api_service.dart';
 import 'package:frontend/features/admin/presentation/providers/admin_providers.dart';
 
-final systemLogsProvider = FutureProvider.family<List<Map<String, dynamic>>, int>((ref, page) async {
+final systemLogsProvider = FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>((ref, params) async {
   final apiService = ref.watch(adminRepositoryProvider) as AdminApiService;
-  return apiService.getSystemLogs(page: page);
+  return apiService.getSystemLogs(
+    page: params['page'] ?? 1,
+    action: params['action'],
+    username: params['username'],
+    startDate: params['startDate'],
+    endDate: params['endDate'],
+  );
 });
 
 class SystemLogsPage extends ConsumerStatefulWidget {
-  const SystemLogsPage({Key? key}) : super(key: key);
+  const SystemLogsPage({super.key});
 
   @override
   ConsumerState<SystemLogsPage> createState() => _SystemLogsPageState();
@@ -19,6 +25,9 @@ class SystemLogsPage extends ConsumerStatefulWidget {
 class _SystemLogsPageState extends ConsumerState<SystemLogsPage> {
   int _currentPage = 1;
   String _selectedLogType = 'All';
+  final TextEditingController _usernameController = TextEditingController();
+  DateTime? _startDate;
+  DateTime? _endDate;
   
   final List<String> _logTypes = [
     'All',
@@ -33,9 +42,23 @@ class _SystemLogsPageState extends ConsumerState<SystemLogsPage> {
     'CONTENT',
   ];
 
+  Map<String, dynamic> get _filterParams => {
+    'page': _currentPage,
+    'action': _selectedLogType == 'All' ? null : _selectedLogType,
+    'username': _usernameController.text.trim().isEmpty ? null : _usernameController.text.trim(),
+    'startDate': _startDate != null ? _startDate!.toIso8601String().substring(0, 10) : null,
+    'endDate': _endDate != null ? _endDate!.toIso8601String().substring(0, 10) : null,
+  };
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final logsAsyncValue = ref.watch(systemLogsProvider(_currentPage));
+    final logsAsyncValue = ref.watch(systemLogsProvider(_filterParams));
     
     return Scaffold(
       appBar: AppBar(
@@ -43,13 +66,13 @@ class _SystemLogsPageState extends ConsumerState<SystemLogsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(systemLogsProvider(_currentPage)),
+            onPressed: () => ref.refresh(systemLogsProvider(_filterParams)),
           ),
         ],
       ),
       body: Column(
         children: [
-          _buildFilterBar(),
+          _buildFilterBar(context),
           Expanded(
             child: logsAsyncValue.when(
               data: (logs) {
@@ -57,25 +80,14 @@ class _SystemLogsPageState extends ConsumerState<SystemLogsPage> {
                   return const Center(child: Text('No logs found'));
                 }
                 
-                // Filter logs if a type is selected
-                final filteredLogs = _selectedLogType == 'All' 
-                    ? logs 
-                    : logs.where((log) => log['action'] == _selectedLogType).toList();
-                
-                if (filteredLogs.isEmpty) {
-                  return Center(
-                    child: Text('No ${_selectedLogType.toLowerCase()} logs found'),
-                  );
-                }
-                
                 return RefreshIndicator(
                   onRefresh: () async {
-                    ref.refresh(systemLogsProvider(_currentPage));
+                    ref.refresh(systemLogsProvider(_filterParams));
                   },
                   child: ListView.builder(
-                    itemCount: filteredLogs.length,
+                    itemCount: logs.length,
                     itemBuilder: (context, index) {
-                      final log = filteredLogs[index];
+                      final log = logs[index];
                       return _buildLogCard(log);
                     },
                   ),
@@ -93,36 +105,143 @@ class _SystemLogsPageState extends ConsumerState<SystemLogsPage> {
     );
   }
   
-  Widget _buildFilterBar() {
+  Widget _buildFilterBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       color: Colors.grey.shade100,
-      child: Row(
+      child: Column(
         children: [
-          const Text('Filter by type:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(width: 16.0),
-          Expanded(
-            child: DropdownButton<String>(
-              value: _selectedLogType,
-              isExpanded: true,
-              underline: Container(
-                height: 1,
-                color: Colors.grey.shade400,
+          Row(
+            children: [
+              const Text('Filter by type:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 16.0),
+              Expanded(
+                child: DropdownButton<String>(
+                  value: _selectedLogType,
+                  isExpanded: true,
+                  underline: Container(
+                    height: 1,
+                    color: Colors.grey.shade400,
+                  ),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedLogType = newValue;
+                        _currentPage = 1;
+                      });
+                    }
+                  },
+                  items: _logTypes.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
               ),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('Username:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter username',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) {
+                    setState(() {
+                      _currentPage = 1;
+                    });
+                  },
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: 'Search by username',
+                onPressed: () {
                   setState(() {
-                    _selectedLogType = newValue;
+                    _currentPage = 1;
                   });
-                }
-              },
-              items: _logTypes.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('Date range:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _startDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _startDate = picked;
+                        _currentPage = 1;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Start date',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    child: Text(_startDate != null ? DateFormat('yyyy-MM-dd').format(_startDate!) : 'Select'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _endDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _endDate = picked;
+                        _currentPage = 1;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'End date',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    child: Text(_endDate != null ? DateFormat('yyyy-MM-dd').format(_endDate!) : 'Select'),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.clear),
+                tooltip: 'Clear dates',
+                onPressed: () {
+                  setState(() {
+                    _startDate = null;
+                    _endDate = null;
+                    _currentPage = 1;
+                  });
+                },
+              ),
+            ],
           ),
         ],
       ),

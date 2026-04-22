@@ -1,8 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:frontend/app/providers/bookmark_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/core/presentation/widgets/proxied_network_image.dart';
 import 'package:frontend/domain/entities/article_model.dart';
 import 'package:frontend/presentation/screens/article_view.dart';
 import 'package:frontend/presentation/screens/comment_screen.dart';
@@ -12,18 +11,15 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/app/providers/auth_provider.dart';
-import 'package:frontend/l10n/app_localizations.dart';
 
 // Provider to fetch comment count for an article
-final commentCountProvider = FutureProvider.family<int, String>((
-  ref,
-  newsId,
-) async {
-  String? accessToken = ref.read(authProvider);
+final commentCountProvider =
+    FutureProvider.family<int, String>((ref, newsId) async {
+  String? accessToken = ref.read(authTokenProvider);
   final prefs = await SharedPreferences.getInstance();
 
-  // Refresh token logic
-  Future<String?> _refreshToken() async {
+  // Refresh token logic (same as CommentScreen)
+  Future<String?> refreshToken() async {
     try {
       final refreshToken = prefs.getString('refresh_token');
       final authProviderType = prefs.getString('auth_provider') ?? 'neqat';
@@ -55,7 +51,7 @@ final commentCountProvider = FutureProvider.family<int, String>((
   if (accessToken == null) {
     accessToken = prefs.getString('access_token');
     if (accessToken == null) {
-      accessToken = await _refreshToken();
+      accessToken = await refreshToken();
       if (accessToken == null) return 0;
     }
   }
@@ -63,8 +59,7 @@ final commentCountProvider = FutureProvider.family<int, String>((
   // Fetch backend news_id
   final newsResponse = await http.get(
     Uri.parse(
-      '${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(newsId)}',
-    ),
+        '${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(newsId)}'),
     headers: {'Authorization': 'Bearer $accessToken'},
   );
 
@@ -75,12 +70,11 @@ final commentCountProvider = FutureProvider.family<int, String>((
       backendNewsId = data['results'][0]['id'];
     }
   } else if (newsResponse.statusCode == 401) {
-    accessToken = await _refreshToken();
+    accessToken = await refreshToken();
     if (accessToken != null) {
       final retryResponse = await http.get(
         Uri.parse(
-          '${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(newsId)}',
-        ),
+            '${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(newsId)}'),
         headers: {'Authorization': 'Bearer $accessToken'},
       );
       if (retryResponse.statusCode == 200) {
@@ -97,8 +91,7 @@ final commentCountProvider = FutureProvider.family<int, String>((
   // Fetch comments
   final commentsResponse = await http.get(
     Uri.parse(
-      '${dotenv.env['django_api']}/api/comments/?news_id=$backendNewsId',
-    ),
+        '${dotenv.env['django_api']}/api/comments/?news_id=$backendNewsId'),
     headers: {'Authorization': 'Bearer $accessToken'},
   );
 
@@ -120,12 +113,11 @@ final commentCountProvider = FutureProvider.family<int, String>((
       return countNestedComments(data['results'] as List<dynamic>);
     }
   } else if (commentsResponse.statusCode == 401) {
-    accessToken = await _refreshToken();
+    accessToken = await refreshToken();
     if (accessToken != null) {
       final retryResponse = await http.get(
         Uri.parse(
-          '${dotenv.env['django_api']}/api/comments/?news_id=$backendNewsId',
-        ),
+            '${dotenv.env['django_api']}/api/comments/?news_id=$backendNewsId'),
         headers: {'Authorization': 'Bearer $accessToken'},
       );
       if (retryResponse.statusCode == 200) {
@@ -140,162 +132,18 @@ final commentCountProvider = FutureProvider.family<int, String>((
   return 0;
 });
 
-// Provider to force UI updates
-final viewCountUpdateProvider = StateProvider<int>((ref) => 0);
-
-// Provider to fetch view count for an article
-final viewCountProvider = FutureProvider.family<int, String>((ref, url) async {
-  // Watch the update provider to force refresh
-  ref.watch(viewCountUpdateProvider);
-
-  try {
-    String? accessToken = ref.read(authProvider);
-    final prefs = await SharedPreferences.getInstance();
-
-    if (accessToken == null) {
-      accessToken = prefs.getString('access_token');
-      if (accessToken == null) {
-        accessToken = await _refreshToken();
-        if (accessToken == null) return 0;
-      }
-    }
-
-    // Fetch backend news_id
-    final newsResponse = await http.get(
-      Uri.parse('${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(url)}'),
-      headers: {'Authorization': 'Bearer $accessToken'},
-    );
-
-    String? backendNewsId;
-    if (newsResponse.statusCode == 200) {
-      final data = jsonDecode(newsResponse.body);
-      if (data['results'] != null && data['results'].isNotEmpty) {
-        backendNewsId = data['results'][0]['id'];
-      }
-    } else if (newsResponse.statusCode == 401) {
-      accessToken = await _refreshToken();
-      if (accessToken != null) {
-        final retryResponse = await http.get(
-          Uri.parse('${dotenv.env['django_api']}/api/news/?url=${Uri.encodeComponent(url)}'),
-          headers: {'Authorization': 'Bearer $accessToken'},
-        );
-        if (retryResponse.statusCode == 200) {
-          final data = jsonDecode(retryResponse.body);
-          if (data['results'] != null && data['results'].isNotEmpty) {
-            backendNewsId = data['results'][0]['id'];
-          }
-        }
-      }
-    }
-
-    if (backendNewsId == null) return 0;
-
-    // Fetch view count
-    final viewResponse = await http.get(
-      Uri.parse('${dotenv.env['django_api']}/api/comments/view_count/?news_id=$backendNewsId'),
-      headers: {'Authorization': 'Bearer $accessToken'},
-    );
-
-    if (viewResponse.statusCode == 200) {
-      final data = jsonDecode(viewResponse.body);
-      return data['view_count'] as int;
-    } else if (viewResponse.statusCode == 401) {
-      accessToken = await _refreshToken();
-      if (accessToken != null) {
-        final retryResponse = await http.get(
-          Uri.parse('${dotenv.env['django_api']}/api/comments/view_count/?news_id=$backendNewsId'),
-          headers: {'Authorization': 'Bearer $accessToken'},
-        );
-        if (retryResponse.statusCode == 200) {
-          final data = jsonDecode(retryResponse.body);
-          return data['view_count'] as int;
-        }
-      }
-    }
-
-    return 0;
-  } catch (e) {
-    return 0;
-  }
-});
-
-// Helper function for token refresh
-Future<String?> _refreshToken() async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final refreshToken = prefs.getString('refresh_token');
-    final authProviderType = prefs.getString('auth_provider') ?? 'neqat';
-    if (refreshToken == null) return null;
-
-    final response = await http.post(
-      Uri.parse('${dotenv.env['django_api']}/api/token/refresh/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refresh': refreshToken}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final newAccessToken = data['access'];
-      final newRefreshToken = data['refresh'];
-      await prefs.setString('access_token', newAccessToken);
-      await prefs.setString('refresh_token', newRefreshToken);
-      await prefs.setString('auth_provider', authProviderType);
-      return newAccessToken;
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
 class BlogTile extends ConsumerWidget {
   final ArticleModel article;
-  final VoidCallback? onBookmarkTap;
-  @override
-  const BlogTile({required this.article, this.onBookmarkTap, Key? key})
-    : super(key: key);
+
+  const BlogTile({required this.article, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-
     // Watch the comment count provider
     final commentCountAsync = ref.watch(commentCountProvider(article.url!));
-    // Watch the view count provider
-    final viewCountAsync = ref.watch(viewCountProvider(article.url!));
-    // Watch the bookmark provider
-    final isBookmarked = ref.watch(bookmarkProvider(article.url!));
 
     return GestureDetector(
-      // inside BlogTile.build():
-      onTap: () {
-        if (article.type == ArticleType.telegram) {
-          // If this is a Telegram message, open our CommentScreen instead of the web-view.
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => CommentScreen(
-                    article: article,
-                    isTelegram: true,
-                    newsId: null,
-                  ),
-            ),
-          );
-        } else {
-          // For normal news, go to your web-view
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ArticleView(
-                blogUrl: article.url!,
-                title: article.title ?? l10n.noTitle,
-              ),
-            ),
-          );
-        }
-      },
-
+      onTap: () => _navigateToArticle(context),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         child: Padding(
@@ -313,18 +161,11 @@ class BlogTile extends ConsumerWidget {
                     children: [
                       _buildArticleImage(context),
                       const SizedBox(width: 12),
-                      _buildArticleContent(context, l10n),
+                      _buildArticleContent(context),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildInteractionBar(
-                    context,
-                    l10n,
-                    commentCountAsync,
-                    viewCountAsync,
-                    isBookmarked,
-                    ref,
-                  ),
+                  _buildInteractionBar(context, commentCountAsync),
                 ],
               ),
             ),
@@ -335,58 +176,43 @@ class BlogTile extends ConsumerWidget {
   }
 
   Widget _buildArticleImage(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
+      child: ProxiedNetworkImage(
+        imageUrl: article.urlToImage!,
         height: 120,
         width: 120,
-        child:
-            article.urlToImage != null && article.urlToImage!.isNotEmpty
-                ? CachedNetworkImage(
-                  imageUrl: article.urlToImage!,
-                  height: 120,
-                  width: 120,
-                  fit: BoxFit.cover,
-                  errorWidget:
-                      (context, url, error) => SvgPicture.asset(
-                        'images/neqat_logo/logo-color.svg',
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.contain,
-                      ),
-                )
-                : SvgPicture.asset(
-                  'images/neqat_logo/logo-color.svg',
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.contain,
-                ),
+        fit: BoxFit.cover,
+        errorBuilder: (context, url, error) => SvgPicture.asset(
+          'images/neqat_logo/logo-color.svg',
+          width: 120,
+          height: 120,
+        ),
       ),
     );
   }
 
-  Widget _buildArticleContent(BuildContext context, AppLocalizations l10n) {
+  Widget _buildArticleContent(BuildContext context) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            article.title ?? l10n.noTitle,
+            article.title!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
           Text(
-            article.description ?? l10n.noDescription,
+            article.description!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
@@ -396,93 +222,47 @@ class BlogTile extends ConsumerWidget {
   }
 
   Widget _buildInteractionBar(
-    BuildContext context,
-    AppLocalizations l10n,
-    AsyncValue<int> commentCountAsync,
-    AsyncValue<int> viewCountAsync,
-    bool isBookmarked,
-    WidgetRef ref,
-  ) {
+      BuildContext context, AsyncValue<int> commentCountAsync) {
+    // Mock data for views (replace with actual data if available)
+    const int viewCount = 1234;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildInteractionItem(
           context,
-          l10n,
           icon: Icons.visibility_outlined,
-          count: viewCountAsync.when(
-            data: (count) => count,
-            loading: () => null,
-            error: (error, stack) => 0,
-          ),
-          onTap: () {},
+          count: viewCount,
+          onTap: () {
+            // Optional: Handle view count tap (e.g., show analytics)
+          },
         ),
         _buildInteractionItem(
           context,
-          l10n,
           icon: Icons.comment_outlined,
           count: commentCountAsync.when(
             data: (count) => count,
-            loading: () => null,
-            error: (error, stack) => 0,
+            loading: () => null, // Show no count while loading
+            error: (error, stack) => 0, // Show 0 on error
           ),
           onTap: () {
-            if (article.url == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.postCommentNoIdMessage)),
-              );
-              return;
-            }
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CommentScreen(
-                  article: article,
-                  isTelegram: false,
-                  newsId: article.url,
-                ),
+                builder: (context) =>
+                    CommentScreen(newsId: article.url!, article: article),
               ),
             );
           },
         ),
         _buildInteractionItem(
           context,
-          l10n,
-          icon:
-              isBookmarked
-                  ? Icons.bookmark_added_outlined
-                  : Icons.bookmark_add_outlined,
-          count: null,
-          onTap:
-              onBookmarkTap ??
-              () {
-                // fallback if no callback was provided
-                ref
-                    .read(bookmarkProvider(article.url!).notifier)
-                    .toggleBookmark();
-              },
-
-          color:
-              isBookmarked ? Colors.blue : null, // Golden color for bookmarked
-        ),
-        _buildInteractionItem(
-          context,
-          l10n,
           icon: Icons.share_outlined,
           count: null,
           onTap: () {
-            if (article.url == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.postCommentNoIdMessage)),
-              );
-              return;
-            }
             Share.share(
-              l10n.shareArticleMessage(
-                article.title ?? l10n.noTitle,
-                article.url!,
-              ),
-              subject: article.title ?? l10n.noTitle,
+              '${article.title}\n${article.url}',
+              subject: article.title,
             );
           },
         ),
@@ -491,44 +271,31 @@ class BlogTile extends ConsumerWidget {
   }
 
   Widget _buildInteractionItem(
-    BuildContext context,
-    AppLocalizations l10n, {
+    BuildContext context, {
     required IconData icon,
     required int? count,
     required VoidCallback onTap,
-    Color? color,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.transparent,
-            ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 20,
-                color:
-                    color ??
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
           if (count != null) ...[
             const SizedBox(width: 4),
             Text(
-              count > 1000
-                  ? '${(count / 1000).toStringAsFixed(1)}${l10n.thousandAbbreviation}'
-                  : '$count',
+              count > 1000 ? '${(count / 1000).toStringAsFixed(1)}K' : '$count',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 12,
-              ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
+                    fontSize: 12,
+                  ),
             ),
           ],
         ],
@@ -540,10 +307,7 @@ class BlogTile extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleView(
-          blogUrl: article.url!,
-          title: article.title ?? AppLocalizations.of(context)!.noTitle,
-        ),
+        builder: (context) => ArticleView(blogUrl: article.url!),
       ),
     );
   }

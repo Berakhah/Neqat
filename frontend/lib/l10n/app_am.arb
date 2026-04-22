@@ -74,20 +74,20 @@
   "onboardingSecondTitle": "የምትገዛውን ተረዳ",
   "onboardingSecondDescription": "የምርት ባርኮዶችን ቃኝ ወይም የተጠቃሚዎችን አስተያየት አንብብ ስለ ምርቶች እውነትን ለመረዳት። በመረጃ ላይ የተመሰረተ ምርጫ አድርግ እና በልበ ሙሉነት ግዢ አድርግ።",
   "onboardingThirdTitle": "መረጃ ይኑርህ፣ ቀድመህ ቆይ",
-  "onboardingThirdDescription": "ለአንተ አስፈላጊ በሆኑ ርዕሰ ጉዳዮች ላይ የተመረጡ የዜና ዝመናዎችን ተቀበል። በዓለም ዙሪያህ ስላለው መረጃ እወቅ እና የተሻሉ ውሳኔዎችን አድርግ",
+  "onboardingThirdDescription": "ለአንተ አስፈ� Balaጊ በሆኑ ርዕሰ ጉዳዮች ላይ የተመረጡ የዜና ዝመናዎችን ተቀበል። በዓለም ዙሪያህ ስላለው መረጃ እወቅ እና የተሻሉ ውሳኔዎችን አድርግ",
   "nextButton": "ቀጣይ",
   "getStartedButton": "ጀምር",
   "forgotPasswordTitle": "የይለፍ ቃል ረሳሁ?",
   "emailResetPrompt": "የይለፍ ቃል መመለሻ መመሪያዎችን ለመቀበል ኢሜልህን አስገባ",
   "resetPasswordTitle": "የይለፍ ቃል መመለስ",
-  "verificationCodePrompt": "ወደ ኢሜልህ የተላከውን የማረጋገጊያ ኮድ አስገባ",
+  "verificationCodePrompt": "ወደ ኢሜልህ የተላከውን የማረጋገጫ ኮድ አስገባ",
   "emailEmptyError": "እባክህ ኢሜልህን አስገባ",
   "resetInstructionsSent": "የመመለሻ መመሪያዎች ወደ ኢሜልህ ተልከዋል",
   "resetEmailFailed": "የመመለሻ ኢሜል መላክ አልተሳካም። እባክህ እንደገና ሞክር።",
   "resetPasswordFailed": "የይለፍ ቃል መመለስ አልተሳካም። እባክህ እንደገና ሞክር።",
   "passwordResetSuccess": "የይለፍ ቃልህ በተሳካ ሁኔታ ተመልሷል።",
   "rememberPasswordLink": "የይለፍ ቃልህን አስታወስክ? ግባ",
-  "verificationCodeHint": "የማረጋገጊያ ኮድ",
+  "verificationCodeHint": "የማረጋገጫ ኮድ",
   "newPasswordHint": "አዲስ የይለፍ ቃል",
   "confirmNewPasswordHint": "አዲስ የይለፍ ቃል አረጋግጥ",
   "sendResetInstructionsButton": "የመመለሻ መመሪያዎችን ላክ",
@@ -180,193 +180,5 @@
   "technologyCategory": "ቴክኖሎጂ",
   "@technologyCategory": {
     "description": "ለቴክኖሎጂ ዜና ምድብ ስም"
-  },
-  "commentsPageTitle": "ሪፕላይቶች",
-  "@commentsPageTitle": {
-    "description": "ለሪፕላይቶች ገፅ ርዕስ"
-  },
-  "noCommentsMessage": "አሁን ምንም ሪፕላይ የለም",
-  "@noCommentsMessage": {
-    "description": "ሪፕላይቶች ሳይኖሩበት ጊዜ የሚታይ መልእክት"
-  },
-  "addCommentHint": "ሪፕላይ ያክሉ...",
-  "@addCommentHint": {
-    "description": "ለአዲስ ሪፕላይ መጫን ምሳሌ ጽሁፍ"
-  },
-  "writeReplyHint": "መልስህን ጽፈት...",
-  "@writeReplyHint": {
-    "description": "ለሪፕላይ መልስ መጽሐፍ ምሳሌ ጽሁፍ"
-  },
-  "loginAgainMessage": "እባክዎ ፈጥነው ደግሞ ግቡ",
-  "@loginAgainMessage": {
-    "description": "የተጠቃሚን እንደገና መግባት የምታደርገው መልእክት"
-  },
-  "sessionExpiredMessage": "የክፍያ ጊዜ አልፏል። እባክዎ እንደገና ግቡ።",
-  "@sessionExpiredMessage": {
-    "description": "የክፍያ ጊዜ መጨረሻን ያመለክታል መልእክት"
-  },
-  "tokenRefreshError": "የቶክን መመልከቻ ስህተት፡ {error}",
-  "@tokenRefreshError": {
-    "description": "የቶክን መመልከቻ ስህተት መልእክት",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "articleNotFoundMessage": "ጽሁፍ በመዋቅር ውስጥ አልተገኘም",
-  "@articleNotFoundMessage": {
-    "description": "ጽሁፍ በመዋቅር ውስጥ ሳይኖር መልእክት"
-  },
-  "fetchArticleIdError": "የጽሁፍ ID መገንጠጥ አልተሳካም፡ {details}",
-  "@fetchArticleIdError": {
-    "description": "የጽሁፍ ID መገንጠጥ ስህተት መልእክት",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchArticleIdException": "የጽሁፍ ID መገንጠጥ ስህት፡ {error}",
-  "@fetchArticleIdException": {
-    "description": "የጽሁፍ ID መገንጠጥ እባበት መልእክት",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "invalidCommentDataMessage": "የሪፕላይ ውሂብ መልኩ ያልተመደበ ነው",
-  "@invalidCommentDataMessage": {
-    "description": "ያልተመደበ የሪፕላይ ውሂብ መልክ መልእክት"
-  },
-  "loadCommentsError": "ሪፕላይቶችን መጫን አልተሳካም፡ {details}",
-  "@loadCommentsError": {
-    "description": "ሪፕላይቶችን መጫን ስህተት መልእክት",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "loadCommentsException": "ሪፕላይቶችን መጫን ስህት፡ {error}",
-  "@loadCommentsException": {
-    "description": "ሪፕላይቶችን መጫን እባበት መልእክት",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "postCommentNoIdMessage": "ሪፕላይ ሊፈጸም አይችልም፡ ጽሁፍ ID አልተገኘም",
-  "@postCommentNoIdMessage": {
-    "description": "ጽሁፍ ID ሳይኖር ሪፕላይ መፈጸም መልእክት"
-  },
-  "emptyCommentMessage": "ሪፕላይ መጽሐፍ ባዶ መሆን አይቻልም",
-  "@emptyCommentMessage": {
-    "description": "ሪፕላይ መጽሐፍ ባዶ ሲሆን መልእክት"
-  },
-  "commentPostedMessage": "ሪፕላዩ በተሳካ ሁኔታ ተገኝቷል",
-  "@commentPostedMessage": {
-    "description": "ሪፕላይ መፈጸም የተሳካ መልእክት"
-  },
-  "postCommentError": "ሪፕላዩን መቀመጥ አልተሳካም፡ {details}",
-  "@postCommentError": {
-    "description": "ሪፕላይ መቀመጥ ስህተት መልእክት",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "generalErrorMessage": "ስህተት፡ {error}",
-  "@generalErrorMessage": {
-    "description": "አጠቃላይ ስህተት መልእክት",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "replyingToLabel": "ለ @{username} መልስ መስጠት",
-  "@replyingToLabel": {
-    "description": "የመልስ መስጠት ለተወሰነ ተጠቃሚ መልእክት",
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
-"replyCountLabel": "{count} መልስ{countIsOne,plural,one{ት}other{ቶች}}",
-"@replyCountLabel": {
-  "description": "Label for the number of replies, with plural support",
-  "placeholders": {
-    "count": {
-      "type": "int"
-    },
-    "countIsOne": {
-      "type": "int"
-    }
-  }
-},
-"bookmarksTitle": "መለያ ምልክቶች",
-"@bookmarksTitle": {
-  "description": "Title for the bookmarks screen"
-},
-"noBookmarksMessage": "እስካሁን ምንም ጽሁፎች ምልክት አልተደረገባቸውም።",
-"@noBookmarksMessage": {
-  "description": "Message displayed when no articles are bookmarked"
-},
-"errorLoadingBookmarks": "መለያ ምልክቶችን መጫን አልተሳካም። እባክህ እንደገና ሞክር።",
-"@errorLoadingBookmarks": {
-  "description": "Error message when bookmarks fail to load"
-},
-"retryButton": "እንደገና ሞክር",
-"@retryButton": {
-  "description": "Label for the retry button"
-},
-  "searchNewsHint": "ዜና ፈልግ",
-  "@searchNewsHint": {
-    "description": "ለዜና ፍለጋ መግቢያ መስክ ምሳሌ ጽሁፍ"
-  },
-  "originalQueryLabel": "ዋናው: {query}",
-  "@originalQueryLabel": {
-    "description": "ለዋናው ፍለጋ መጠይቅ መለያ",
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
-  "stemmedQueryLabel": "የተጣራ: {query}",
-  "@stemmedQueryLabel": {
-    "description": "ለተጣራ ፍለጋ መጠይቅ መለያ",
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
-  "noNewsOrMessagesFound": "ምንም ዜና ወይም የቴሌግራም መልዕክቶች አልተገኙም",
-  "@noNewsOrMessagesFound": {
-    "description": "ምንም ዜና ወይም የቴሌግራም መልዕክቶች በማይኖሩበት ጊዜ የሚታይ መልእክት"
-  },
-  "totalArticlesLabel": "{count} አቃፊዎች ተገኝተዋል",
-  "@totalArticlesLabel": {
-    "description": "ለተገኘው የአቃፊዎች ጠቋሚ ቁጥር መለያ",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "totalTelegramMessagesLabel": "{count} የቴሌግራም መልዕክቶች ተገኝተዋል",
-  "@totalTelegramMessagesLabel": {
-    "description": "ለተገኘው የቴሌግራም መልዕክቶች ጠቋሚ ቁጥር መለያ",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   }
 }

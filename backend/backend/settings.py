@@ -1,40 +1,57 @@
 import os
+
+SECURE_SSL_REDIRECT = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from .keycloak_config import KEYCLOAK_CONFIG
+from django.utils.translation import gettext_lazy as _
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from custom .env file if specified
+env_file = os.getenv('DJANGO_DOTENV_FILE', '.env')
+load_dotenv(env_file)
+print(f"Loaded environment from: {env_file}")
+
+# Validate required Keycloak configuration
+required_keycloak_vars = [
+    'KEYCLOAK_SERVER_URL',
+    'KEYCLOAK_REALM',
+    'KEYCLOAK_CLIENT_ID',
+    'KEYCLOAK_CLIENT_SECRET',
+]
+
+# Check and warn about missing configuration
+missing_vars = [var for var in required_keycloak_vars if not os.getenv(var)]
+if missing_vars:
+    print(f"WARNING: Missing required Keycloak environment variables: {', '.join(missing_vars)}")
+    print("Authentication may not work correctly without these variables.")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'qh!n$8$44^hlgyh%d=4^l)btia8p#hkfec8=d#z | 000@=*%=3g'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost','192.168.10.102', '127.0.0.1', '10.0.2.2', '192.168.1.4', '192.168.8.104','192.168.100.10','10.1.1.4', '10.42.0.93','192.168.100.10','192.168.226.99', '172.20.10.4', '192.168.170.99', '192.168.180.99']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.64.132').split(',')
 
 # Add CSRF trusted origins for production (required for POST requests from Flutter)
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://10.0.2.2:8000',
-    'http://192.168.1.4:8000',
-    'http://192.168.8.104:8000',
-    'http://192.168.100.10:8000',
-    'http://10.1.1.4:8000',
-    'http://10.42.0.93:8000',
-    'http://192.168.226.99:8000',
-    'http://192.168.170.99:8000',
-    'http://192.168.180.99:8000',
-    'http://192.168.10.102:8000'
-]
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost:8000,http://localhost:8080,http://keycloak:8080'
+).split(',')
+
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://frontend:3000,http://localhost:8080,http://keycloak:8080,http://192.168.134.132:8000,http://192.168.134.132:3000,http://192.168.134.132:8080,http://localhost:49794,http://localhost:53165'
+).split(',')
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -53,9 +70,6 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'access-control-allow-origin',
-    'access-control-allow-headers',
-    'access-control-allow-methods',
 ]
 
 INSTALLED_APPS = [
@@ -71,6 +85,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',  # Added for CORS support
     'api',
+    'django_extensions',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -82,15 +98,22 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'api.middleware.SystemLogMiddleware',  # Temporarily disabled for testing
-    'api.middleware.UUIDMiddleware',  # Added for UUID serialization
+    'api.middleware.SystemLogMiddleware',  # Updated import path
+    'api.middleware.UUIDMiddleware',       # Updated import path
 ]
 
 ROOT_URLCONF = 'backend.urls'
+
+# Static files (CSS, JavaScript, Images) and Flutter web build
+STATIC_URL = os.getenv('STATIC_URL', '/static/')
+STATICFILES_DIRS = [BASE_DIR / 'static']  # Place Flutter web build assets here
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Templates (for serving Flutter web index.html)
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Added for custom templates if needed
+        'DIRS': [BASE_DIR / 'templates'],  # Place Flutter web index.html here
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,32 +128,35 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 # Database Configuration
-# Using SQLite for development (easier to set up)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     },
-# }
+db_engine = os.getenv('DATABASE_ENGINE', 'mssql')
 
-# SQL Server configuration 
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',  # Requires 'mssql-django' package
-        'NAME': 'NeqatDB',
-        'HOST': 'localhost',
-        'PORT': '1433',
-        'USER': 'SA',
-        'PASSWORD': 'ChangeMe_Dev123!',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes',  # May be needed for local development
-        },
-    },
-}
+if db_engine == 'sqlite3':
+    # SQLite configuration for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / os.getenv('DATABASE_NAME', 'db.sqlite3'),
+        }
+    }
+else:
+    # SQL Server configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'mssql',
+            'NAME': os.getenv('DATABASE_NAME', 'NeqatDB'),
+            'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+            'PORT': os.getenv('DATABASE_PORT', '1433'),
+            'USER': os.getenv('DATABASE_USER', 'SA'),
+            'PASSWORD': os.getenv('DATABASE_PASSWORD', 'ChangeMe_Dev123!'),
+            'OPTIONS': {
+                'driver': 'ODBC Driver 18 for SQL Server',
+                'extra_params': 'TrustServerCertificate=yes;Encrypt=no;',
+            },
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -141,19 +167,30 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Added for custom static files
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # For collectstatic in production
+# Available languages for translation
+LANGUAGES = [
+    ('en', _('English')),
+    ('am', _('Amharic')),
+]
+
+# Path to locale directory
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
 
 # Media files (User-uploaded content)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = os.getenv('MEDIA_URL', '/Images/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'Images')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -164,54 +201,57 @@ AUTH_USER_MODEL = 'api.NeqatUser'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',  # Added for development
+        'api.keycloak_backend.KeycloakAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
+    'PAGE_SIZE': 10,
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
-    'UNAUTHENTICATED_USER': None,  # This ensures unauthenticated requests are handled properly
-    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',  # Added for better error handling
-}
-
-# Simple JWT Configuration
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/day',
+        'anon': '100/day',
+        'login': '5/minute',
+        'password_reset': '3/hour',
+        'flag_content': '5/hour',
+    },
 }
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.twitter.TwitterOAuth',
-    'social_core.backends.github.GithubOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'api.keycloak_backend.KeycloakAuthentication',
 )
+
+# Keycloak Configuration (from keycloak_config.py)
+# KEYCLOAK_CONFIG is imported at the top of the file
+
+# Frontend URL for redirects
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
 # Social Auth Configuration
 # Google
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '162490596813-40a51nrtjtho4v6s0j6dcebdlno6jnoe.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = ''  # Add your Google OAuth2 secret here
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = os.getenv('GOOGLE_OAUTH2_SCOPE', 'email,profile').split(',')
 
 # Twitter
-SOCIAL_AUTH_TWITTER_KEY = 'your-twitter-api-key'  # Add your Twitter API Key
-SOCIAL_AUTH_TWITTER_SECRET = 'your-twitter-api-secret'  # Add your Twitter API Secret
+SOCIAL_AUTH_TWITTER_KEY = os.getenv('TWITTER_API_KEY')
+SOCIAL_AUTH_TWITTER_SECRET = os.getenv('TWITTER_API_SECRET')
 
 # GitHub
-SOCIAL_AUTH_GITHUB_KEY = 'your-github-client-id'  # Add your GitHub Client ID
-SOCIAL_AUTH_GITHUB_SECRET = 'your-github-client-secret'  # Add your GitHub Client Secret
-SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
+SOCIAL_AUTH_GITHUB_KEY = os.getenv('GITHUB_CLIENT_ID')
+SOCIAL_AUTH_GITHUB_SECRET = os.getenv('GITHUB_CLIENT_SECRET')
+SOCIAL_AUTH_GITHUB_SCOPE = os.getenv('GITHUB_SCOPE', 'user:email').split(',')
 
 # Social Auth Pipeline
 SOCIAL_AUTH_PIPELINE = (
@@ -230,28 +270,29 @@ SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_USER_MODEL = 'api.NeqatUser'
 
 # Social Auth Redirect URIs
-SOCIAL_AUTH_REDIRECT_URI = 'http://localhost:8000/auth/complete/google-oauth2/'
-SOCIAL_AUTH_TWITTER_REDIRECT_URI = 'http://localhost:8000/auth/complete/twitter/'
-SOCIAL_AUTH_GITHUB_REDIRECT_URI = 'http://localhost:8000/auth/complete/github/'
+SOCIAL_AUTH_REDIRECT_URI = os.getenv('SOCIAL_AUTH_REDIRECT_URI', 'http://localhost:8000/api/auth/callback')
+SOCIAL_AUTH_TWITTER_REDIRECT_URI = os.getenv('SOCIAL_AUTH_TWITTER_REDIRECT_URI', 'http://localhost:8000/auth/complete/twitter/')
+SOCIAL_AUTH_GITHUB_REDIRECT_URI = os.getenv('SOCIAL_AUTH_GITHUB_REDIRECT_URI', 'http://localhost:8000/auth/complete/github/')
 
-# Email Configuration for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# Uncomment below for production with real email delivery
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@neqat.com'
+# Email Configuration
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@neqat.com')
 
-# Security Settings (for production)
-SECURE_SSL_REDIRECT = False  # Set to True in production with HTTPS
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
-CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+# Security Settings
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
+SECURE_BROWSER_XSS_FILTER = os.getenv('SECURE_BROWSER_XSS_FILTER', 'True') == 'True'
+SECURE_CONTENT_TYPE_NOSNIFF = os.getenv('SECURE_CONTENT_TYPE_NOSNIFF', 'True') == 'True'
+X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'True') == 'True'
 
 # Import compatibility mode for UUID handling
 try:
@@ -259,3 +300,69 @@ try:
     print("UUID compatibility mode enabled for SQL Server")
 except ImportError:
     pass
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'api.keycloak_backend': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'api.token_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'api.views': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# Encryption key for django-encrypted-model-fields
+# IMPORTANT: Set this to a strong, base64-encoded 32-byte key in your environment or .env file
+ENCRYPTED_MODEL_FIELDS_KEY = os.getenv('ENCRYPTED_MODEL_FIELDS_KEY', 'REPLACE_WITH_YOUR_BASE64_KEY')
+
+# For django-encrypted-model-fields compatibility
+FIELD_ENCRYPTION_KEY = ENCRYPTED_MODEL_FIELDS_KEY
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379/1')],
+        },
+    },
+}

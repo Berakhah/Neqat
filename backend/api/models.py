@@ -4,6 +4,7 @@ import uuid
 from datetime import timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from encrypted_model_fields.fields import EncryptedCharField, EncryptedEmailField
 
 # Function to generate UUID strings
 def generate_uuid():
@@ -11,33 +12,40 @@ def generate_uuid():
 
 # NeqatUserManager
 class NeqatUserManager(BaseUserManager):
-    def create_user(self, user_name, email, password=None, **extra_fields):
+    def create_user(self, user_name, email, **extra_fields):
         if not user_name:
             raise ValueError('The UserName field must be set')
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
+        # Create user without password handling
         user = self.model(email=email, user_name=user_name, **extra_fields)
-        user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, user_name, email, password=None, **extra_fields):
+        """
+        Create a superuser - note this is primarily used for Django admin
+        and should rarely be used in a Keycloak-based setup
+        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
-        return self.create_user(user_name, email, password, **extra_fields)
+        return self.create_user(user_name, email, **extra_fields)
 
 # NeqatUser
 class NeqatUser(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(primary_key=True, max_length=100, editable=False, unique=True, default=uuid.uuid4)
+    keycloak_id = models.CharField(max_length=36, unique=True, null=True, blank=True)
     user_name = models.CharField(max_length=50, unique=True)
-    first_name = models.CharField(max_length=50, null=True, blank=True)
-    last_name = models.CharField(max_length=50, null=True, blank=True)
-    email = models.EmailField(max_length=255, unique=True, null=True, blank=False)
+    # Encrypted PII fields
+    first_name = EncryptedCharField(max_length=50, null=True, blank=True)
+    last_name = EncryptedCharField(max_length=50, null=True, blank=True)
+    # Cannot use unique=True with encrypted fields on SQL Server; enforce uniqueness in application logic
+    email = EncryptedEmailField(max_length=255, null=True, blank=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -59,6 +67,11 @@ class NeqatUser(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.first_name or ''
+        
+    # Override set_password to prevent local password setting
+    def set_password(self, raw_password):
+        # We don't store passwords locally anymore; they are managed by Keycloak
+        pass
 
 # PasswordResetToken
 class PasswordResetToken(models.Model):
@@ -66,6 +79,8 @@ class PasswordResetToken(models.Model):
     token = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    used_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'neqat_passwordresettoken'
@@ -100,24 +115,45 @@ class SystemLog(models.Model):
     user = models.ForeignKey('NeqatUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='system_logs')
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
     details = models.TextField(blank=True, null=True)
+    outcome = models.CharField(max_length=50, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    request_id = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(null=True, blank=True)
-    
+    outcome_choices = [
+        ('success', 'Success'),
+        ('denied', 'Denied'),
+        ('error', 'Error'),
+        ('unknown', 'Unknown'),
+    ]
+    outcome = models.CharField(max_length=16, choices=outcome_choices, default='unknown')
+
+    # New fields for robust accountability
+    object_type = models.CharField(max_length=64, null=True, blank=True, help_text='Type of object affected (e.g., User, Post, Comment)')
+    object_id = models.CharField(max_length=128, null=True, blank=True, help_text='ID of the affected object')
+    before = models.JSONField(null=True, blank=True, help_text='State before change (for edits)')
+    after = models.JSONField(null=True, blank=True, help_text='State after change (for edits)')
+
     class Meta:
         db_table = 'neqat_systemlog'
         ordering = ['-timestamp']
         verbose_name = 'System Log'
         verbose_name_plural = 'System Logs'
-    
+
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.id = uuid.uuid4()
+        if self.pk is not None:
+            print(f"Attempted to update existing SystemLog entry with pk: {self.pk}")
+            raise Exception('SystemLog entries are append-only and cannot be updated.')
         super().save(*args, **kwargs)
-        
+
+    def delete(self, *args, **kwargs):
+        print(f"Attempted to delete SystemLog entry with pk: {self.pk}")
+        raise Exception('SystemLog entries are append-only and cannot be deleted.')
+
     def __str__(self):
         user_str = self.user.user_name if self.user else 'System'
-        return f"{self.get_action_display()} by {user_str} at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+        obj_str = f" | {self.object_type}:{self.object_id}" if self.object_type and self.object_id else ''
+        return f"{self.get_action_display()} by {user_str}{obj_str} at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
 
 # UserActivity
 class UserActivity(models.Model):
@@ -284,6 +320,7 @@ class Comment(Content):
             content_type = 'TelegramMessage'
             title = self.telegram_message.message[:50]
         return f"Comment by {self.created_by.user_name} on {content_type}: {title}"
+
 # ContentFlag
 class ContentFlag(models.Model):
     FLAG_REASONS = (
@@ -319,6 +356,7 @@ class ContentFlag(models.Model):
 
     def __str__(self):
         return f"Flag for {self.content_type} - Reason: {self.get_reason_display()}"
+
 # UserPreference
 class UserPreference(models.Model):
     id = models.CharField(max_length=36, primary_key=True, default=generate_uuid, editable=False)
@@ -370,6 +408,7 @@ class UserContentInteraction(models.Model):
 
     def __str__(self):
         return f"{self.user.user_name}'s {self.get_interaction_type_display()} on {self.content_type}"
+
 class TelegramMessage(models.Model):
     sender_id = models.CharField(max_length=255)
     message = models.TextField(
@@ -399,3 +438,61 @@ class Translation(models.Model):
 
     def __str__(self):
         return f"{self.original_text} -> {self.translated_text}"
+
+class ModerationHistory(models.Model):
+    ACTION_CHOICES = (
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('ESCALATED', 'Escalated'),
+        ('FLAGGED', 'Flagged'),
+        ('UNFLAGGED', 'Unflagged'),
+        ('REVERTED', 'Reverted'),
+        ('COMMENTED', 'Moderator Comment'),
+        ('OTHER', 'Other'),
+    )
+    CONTENT_TYPES = (
+        ('POST', 'Post'),
+        ('COMMENT', 'Comment'),
+        ('NEWS', 'News'),
+        ('TELEGRAM', 'TelegramMessage'),
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
+    content_id = models.UUIDField()
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    actor = models.ForeignKey('NeqatUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='moderation_actions')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
+    before = models.JSONField(null=True, blank=True, help_text='State before moderation action')
+    after = models.JSONField(null=True, blank=True, help_text='State after moderation action')
+
+    class Meta:
+        db_table = 'neqat_moderationhistory'
+        ordering = ['-timestamp']
+        verbose_name = 'Moderation History'
+        verbose_name_plural = 'Moderation Histories'
+
+    def __str__(self):
+        return f"{self.get_action_display()} {self.content_type} {self.content_id} by {self.actor} at {self.timestamp}"
+
+class AdminLog(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    action = models.CharField(max_length=255)
+    details = models.TextField(blank=True, null=True)
+    outcome = models.CharField(max_length=255, blank=True, null=True)
+    user = models.CharField(max_length=255, blank=True, null=True)
+    object_type = models.CharField(max_length=255, blank=True, null=True)
+    object_id = models.CharField(max_length=255, blank=True, null=True)
+    action_taken = models.CharField(max_length=255, blank=True, null=True)
+    moderator = models.CharField(max_length=255, blank=True, null=True)
+    before_status = models.CharField(max_length=255, blank=True, null=True)
+    after_status = models.CharField(max_length=255, blank=True, null=True)
+    reason = models.TextField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f'{self.timestamp}: {self.action}'

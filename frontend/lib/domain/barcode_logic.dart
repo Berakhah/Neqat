@@ -8,7 +8,7 @@ class BarcodeLogic {
   const BarcodeLogic({required this.isFlashOn});
 
   Future<String> scanBarcode() async {
-    if (kIsWeb) return "1234567890123"; // Mock barcode for web
+    if (kIsWeb) return "1234567890123"; // Mock barcode for web testing only
 
     try {
       final result = await BarcodeScanner.scan(

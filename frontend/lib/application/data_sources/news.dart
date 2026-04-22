@@ -18,7 +18,7 @@ class News extends ConsumerWidget {
     }
     String? url = '$baseUrl/api/news/?tags=world';
     try {
-      String? token = ref.read(authProvider);
+      String? token = ref.read(authProvider as ProviderListenable<String?>);
       if (token == null) {
         final prefs = await SharedPreferences.getInstance();
         token = prefs.getString('access_token');
@@ -46,7 +46,6 @@ class News extends ConsumerWidget {
           var jsonData = jsonDecode(response.body);
           for (var element in jsonData['results']) {
             ArticleModel articleModel = ArticleModel(
-              type: ArticleType.news,
               author: element['author'] ?? 'Unknown',
               title: element['title'] ?? 'Untitled',
               description: element['content'] ?? element['description'] ?? '',

@@ -8,6 +8,54 @@ A Django REST API backend for the Neqat application.
 - Docker (for SQL Server)
 - Git
 
+## Environment Configuration
+
+The project uses environment variables for configuration. These can be defined in two files:
+
+- `.env` - For local development
+- `docker.env` - For Docker deployment
+
+### Generating Environment Files
+
+We provide a script to generate/update environment files with the required configuration:
+
+```bash
+# Update environment files
+python backend/scripts/generate_env.py
+
+# Force update of Keycloak settings
+python backend/scripts/generate_env.py --force
+```
+
+For Windows users, we also provide a PowerShell script that updates the environment and starts the server:
+
+```powershell
+# Run the script
+.\backend\scripts\run_with_updated_env.ps1
+
+# Force update of Keycloak settings
+.\backend\scripts\run_with_updated_env.ps1 --force
+```
+
+### Keycloak Configuration
+
+The project uses Keycloak for authentication. The following environment variables are required:
+
+```
+KEYCLOAK_SERVER_URL=http://keycloak:8080
+KEYCLOAK_REALM=neqat-realm
+KEYCLOAK_CLIENT_ID=django-backend
+KEYCLOAK_CLIENT_SECRET=your_client_secret
+KEYCLOAK_ADMIN_CLIENT_ID=admin-cli
+KEYCLOAK_ADMIN_CLIENT_SECRET=your_admin_client_secret
+
+# Token keys (matching frontend implementation)
+KEYCLOAK_ACCESS_TOKEN_KEY=access_token
+KEYCLOAK_REFRESH_TOKEN_KEY=refresh_token
+KEYCLOAK_ID_TOKEN_KEY=id_token
+KEYCLOAK_TOKEN_EXPIRY_KEY=token_expiry
+```
+
 ## Setup Instructions
 
 ### 1. Clone the Repository

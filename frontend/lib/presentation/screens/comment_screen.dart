@@ -63,7 +63,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       if (refreshToken == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.loginAgainMessage)));
+        ).showSnackBar(SnackBar(content: Text('Unexpected error occurred.')));
         return null;
       }
 
@@ -84,21 +84,21 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         return newAccessToken;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.sessionExpiredMessage)),
+          SnackBar(content: Text('Unexpected error occurred.')),
         );
         return null;
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.tokenRefreshError(e.toString()))));
+      ).showSnackBar(SnackBar(content: Text('Token refresh error: ${e.toString()}')));
       return null;
     }
   }
 
   Future<void> _fetchBackendNewsId() async {
     try {
-      String? accessToken = ref.read(authProvider);
+      String? accessToken = ref.read(authTokenProvider);
       if (accessToken == null) {
         final prefs = await SharedPreferences.getInstance();
         accessToken = prefs.getString('access_token');
@@ -125,7 +125,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.articleNotFoundMessage)),
+            SnackBar(content: Text('Article not found.')),
           );
         }
       } else if (response.statusCode == 401) {
@@ -149,20 +149,20 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.fetchArticleIdError(response.body)),
+            content: Text('Failed to fetch article: ${response.body}'),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.fetchArticleIdError(response.body)),
+            content: Text('Failed to fetch article: ${response.body}'),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.fetchArticleIdException(e.toString()))));
+      ).showSnackBar(SnackBar(content: Text('Exception while fetching article: $e')));
     }
   }
 
@@ -170,7 +170,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     if (_backendNewsId == null) return;
 
     try {
-      String? accessToken = ref.read(authProvider);
+      String? accessToken = ref.read(authTokenProvider);
       if (accessToken == null) {
         final prefs = await SharedPreferences.getInstance();
         accessToken = prefs.getString('access_token');
@@ -197,7 +197,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.invalidCommentDataMessage)),
+            SnackBar(content: Text('Invalid comment data.')),
           );
         }
       } else if (response.statusCode == 401) {
@@ -217,40 +217,40 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
               });
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.invalidCommentDataMessage)),
+                SnackBar(content: Text('Invalid comment data.')),
               );
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(AppLocalizations.of(context)!.loadCommentsError(retryResponse.body)),
+                content: Text('Failed to load comments: ${retryResponse.body}'),
               ),
             );
           }
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.loadCommentsError(response.body))),
+          SnackBar(content: Text('Failed to load comments: ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.loadCommentsException(e.toString()))));
+      ).showSnackBar(SnackBar(content: Text('Exception while loading comments: ${e.toString()}')));
     }
   }
 
   Future<void> _postComment({String? parentCommentId}) async {
     if (_backendNewsId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.postCommentNoIdMessage)),
+        SnackBar(content: Text('No comment ID found.')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      String? accessToken = ref.read(authProvider);
+      String? accessToken = ref.read(authTokenProvider);
       if (accessToken == null) {
         final prefs = await SharedPreferences.getInstance();
         accessToken = prefs.getString('access_token');
@@ -269,7 +269,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       if (commentContent.isEmpty) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.emptyCommentMessage)));
+        ).showSnackBar(SnackBar(content: Text('Empty comment.')),
+      );
         setState(() => _isLoading = false);
         return;
       }
@@ -292,7 +293,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.commentPostedMessage)));
+        ).showSnackBar(SnackBar(content: Text('Comment posted successfully.')),
+      );
         _commentController.clear();
         setState(() {
           _replyingToCommentId = null;
@@ -337,7 +339,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
             );
             if (retryResponse.statusCode == 201) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.commentPostedMessage)),
+                SnackBar(content: Text('Comment posted successfully.')),
               );
               _commentController.clear();
               setState(() {
@@ -374,13 +376,13 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
           }
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.postCommentError(response.body))),
+          SnackBar(content: Text('Failed to post comment: ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.generalErrorMessage(e.toString()))));
+      ).showSnackBar(SnackBar(content: Text('General error: ${e.toString()}')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -478,7 +480,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            l10n.commentsPageTitle,
+            'Comments',
             style: getInterTextStyle(
               isDark: isDark,
               fontSize: 20,
@@ -618,7 +620,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                     padding: EdgeInsets.all(16),
                     child: Center(
                       child: Text(
-                        l10n.noCommentsMessage,
+                        'No comments yet.',
                         style: getInterTextStyle(
                           isDark: isDark,
                           fontSize: 16,
@@ -663,7 +665,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                l10n.replyingToLabel(_getReplyingToUsername() ?? 'Anonymous'),
+                                'Replying to ${_getReplyingToUsername() ?? 'Anonymous'}',
                                 style: getInterTextStyle(
                                   isDark: isDark,
                                   fontSize: 14,
@@ -713,8 +715,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                             decoration: InputDecoration(
                               hintText:
                                   _replyingToCommentId != null
-                                      ? l10n.writeReplyHint
-                                      : l10n.addCommentHint,
+                                      ? 'Write a reply...'
+                                      : 'Add a comment...',
                               border: theme.inputDecorationTheme.border,
                               enabledBorder:
                                   theme.inputDecorationTheme.enabledBorder,
@@ -857,7 +859,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                           child: TextButton(
                             onPressed: () => _toggleReplies(comment['id']),
                             child: Text(
-                              l10n.replyCountLabel(replyCount, replyCount == 1 ? 1 : 0),
+                              '${replyCount == 1 ? "1 reply" : "$replyCount replies"}',
                               style: getInterTextStyle(
                                 isDark: isDark,
                                 fontSize: 12,

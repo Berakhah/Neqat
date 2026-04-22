@@ -9,7 +9,7 @@ import 'package:frontend/features/admin/presentation/widgets/metrics_data_table.
 import 'package:frontend/features/admin/presentation/widgets/location_map_chart.dart';
 
 class EnhancedDashboardPage extends ConsumerStatefulWidget {
-  const EnhancedDashboardPage({Key? key}) : super(key: key);
+  const EnhancedDashboardPage({super.key});
 
   @override
   ConsumerState<EnhancedDashboardPage> createState() => _EnhancedDashboardPageState();

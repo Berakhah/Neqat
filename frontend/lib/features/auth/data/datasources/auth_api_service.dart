@@ -5,14 +5,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:frontend/core/constants/api_constants.dart';
+import 'package:frontend/services/keycloak_service.dart';
 
 class AuthApiService {
   final http.Client _client;
   final FlutterSecureStorage _secureStorage;
   final Logger _logger = Logger();
-  
-  // Set this to true when backend is not available
-  static const bool useMockMode = false; // Disabled since we're fixing the backend
 
   AuthApiService({
     http.Client? client,
@@ -22,25 +20,25 @@ class AuthApiService {
 
   // Helper method to get auth token
   Future<String?> _getToken() async {
-    return await _secureStorage.read(key: 'access_token');
+    return await _secureStorage.read(key: KeycloakStorageKeys.accessToken);
   }
 
   // Helper method to get refresh token
   Future<String?> _getRefreshToken() async {
-    return await _secureStorage.read(key: 'refresh_token');
+    return await _secureStorage.read(key: KeycloakStorageKeys.refreshToken);
   }
 
   // Helper method to save tokens
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
-    await _secureStorage.write(key: 'access_token', value: accessToken);
-    await _secureStorage.write(key: 'refresh_token', value: refreshToken);
+    await _secureStorage.write(key: KeycloakStorageKeys.accessToken, value: accessToken);
+    await _secureStorage.write(key: KeycloakStorageKeys.refreshToken, value: refreshToken);
     _logger.i("Auth tokens saved");
   }
 
   // Helper method to remove tokens
   Future<void> _removeTokens() async {
-    await _secureStorage.delete(key: 'access_token');
-    await _secureStorage.delete(key: 'refresh_token');
+    await _secureStorage.delete(key: KeycloakStorageKeys.accessToken);
+    await _secureStorage.delete(key: KeycloakStorageKeys.refreshToken);
     _logger.i("Auth tokens removed");
   }
 
@@ -100,24 +98,27 @@ class AuthApiService {
   // Helper method to handle HTTP errors
   Map<String, dynamic> _handleHttpError(dynamic error) {
     String errorMessage;
-    
+
     _logger.e("HTTP error: ${error.toString()}", error: error);
-    
+
     if (error is TimeoutException) {
-      errorMessage = 'Connection timed out. Please check your internet connection and try again.';
+      errorMessage =
+          'Connection timed out. Please check your internet connection and try again.';
     } else if (error.toString().contains('Failed host lookup')) {
-      errorMessage = 'Cannot find the server. Please check your network settings.';
+      errorMessage =
+          'Cannot find the server. Please check your network settings.';
     } else if (error.toString().contains('Connection refused')) {
       errorMessage = 'Connection refused. Please ensure the server is running.';
     } else if (error.toString().contains('Certificate verify failed')) {
       errorMessage = 'SSL certificate verification failed.';
-    } else if (error.toString().contains('Failed to fetch') || 
-              error.toString().contains('ClientException')) {
-      errorMessage = 'Network connection error. Please check your internet connection.';
+    } else if (error.toString().contains('Failed to fetch') ||
+        error.toString().contains('ClientException')) {
+      errorMessage =
+          'Network connection error. Please check your internet connection.';
     } else {
       errorMessage = 'Network error: ${error.toString()}';
     }
-    
+
     return {
       'error': true,
       'message': errorMessage,
@@ -132,10 +133,11 @@ class AuthApiService {
   ) async {
     int retryCount = 0;
     const maxRetries = 3;
-    
+
     while (retryCount < maxRetries) {
       try {
-        _logger.i("Making $operation request (attempt ${retryCount + 1}/$maxRetries)");
+        _logger.i(
+            "Making $operation request (attempt ${retryCount + 1}/$maxRetries)");
         final response = await requestFn();
         return response;
       } catch (e) {
@@ -144,8 +146,10 @@ class AuthApiService {
           _logger.e("$operation failed after $maxRetries attempts", error: e);
           rethrow;
         }
-        _logger.w("$operation attempt $retryCount failed, retrying...", error: e);
-        await Future.delayed(Duration(seconds: 1 * retryCount)); // Exponential backoff
+        _logger.w("$operation attempt $retryCount failed, retrying...",
+            error: e);
+        await Future.delayed(
+            Duration(seconds: 1 * retryCount)); // Exponential backoff
       }
     }
     throw Exception("Unexpected error in _makeRequest");
@@ -159,24 +163,26 @@ class AuthApiService {
   }) async {
     try {
       _logger.i("Registering: $email");
-      
+
       final headers = await _getHeaders(requiresAuth: false);
-      
+
       final requestBody = {
         'user_name': username,
         'email': email,
         'password': password,
       };
-      
+
       try {
         final registerUrl = ApiConstants.register;
-        
-        final response = await _client.post(
-          Uri.parse(registerUrl),
-          headers: headers,
-          body: jsonEncode(requestBody),
-        ).timeout(Duration(seconds: 10));
-        
+
+        final response = await _client
+            .post(
+              Uri.parse(registerUrl),
+              headers: headers,
+              body: jsonEncode(requestBody),
+            )
+            .timeout(const Duration(seconds: 20)); // Increased timeout
+
         Map<String, dynamic> responseData;
         try {
           responseData = json.decode(response.body) as Map<String, dynamic>;
@@ -191,16 +197,18 @@ class AuthApiService {
         if (response.statusCode == 201) {
           _logger.i("Registration successful");
           if (responseData.containsKey('access')) {
-            await _saveTokens(responseData['access'], responseData['refresh']);
+            await _saveTokens(responseData['access'] as String, responseData['refresh'] as String);
           } else if (responseData.containsKey('token')) {
-            await _saveTokens(responseData['token'], responseData['refresh'] ?? '');
+            await _saveTokens(
+                responseData['token'] as String, responseData['refresh'] as String? ?? '');
           }
           return responseData;
         } else {
           _logger.w("Registration failed: ${response.statusCode}");
           return {
             'error': true,
-            'message': _extractErrorMessage(responseData) ?? 'Registration failed',
+            'message':
+                _extractErrorMessage(responseData) ?? 'Registration failed',
             'data': responseData,
           };
         }
@@ -221,32 +229,37 @@ class AuthApiService {
   }) async {
     try {
       _logger.i("Logging in: $email");
-      
+
       final headers = await _getHeaders(requiresAuth: false);
       final loginUrl = ApiConstants.login;
-      
+
       try {
         // Use user_name field as required by the Django backend
-        final response = await _client.post(
-          Uri.parse(loginUrl),
-          headers: headers,
-          body: jsonEncode({
-            'user_name': email,
-            'password': password,
-          }),
-        ).timeout(Duration(seconds: 10));
-        
+        final response = await _client
+            .post(
+              Uri.parse(loginUrl),
+              headers: headers,
+              body: jsonEncode({
+                'user_name': email,
+                'password': password,
+              }),
+            )
+            .timeout(const Duration(seconds: 20)); // Increased timeout
+
         _logger.d("Login response status: ${response.statusCode}");
-        _logger.d("Login response body: ${response.body.substring(0, min(100, response.body.length))}...");
-        
+        if (response.body.isNotEmpty) {
+          final bodyLength = min(100, response.body.length);
+          _logger.d("Login response body: ${response.body.substring(0, bodyLength)}...");
+        }
+
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          await _saveTokens(data['access'], data['refresh']);
-          
+          await _saveTokens(data['access'] as String, data['refresh'] as String);
+
           // Extract is_superuser from access token if it exists
-          final isAdmin = _extractIsAdminFromToken(data['access']);
+          final isAdmin = _extractIsAdminFromToken(data['access'] as String);
           data['user']['is_superuser'] = isAdmin;
-          
+
           _logger.i("Login successful. User is admin: $isAdmin");
           return data;
         } else {
@@ -264,7 +277,8 @@ class AuthApiService {
               // Not a JSON response, return a more helpful error
               return {
                 'error': true,
-                'message': 'Server error (${response.statusCode}). Please contact support.',
+                'message':
+                    'Server error (${response.statusCode}). Please contact support.',
                 'details': 'Raw response not in JSON format'
               };
             }
@@ -272,8 +286,10 @@ class AuthApiService {
             _logger.e("Failed to parse error response", error: e);
             return {
               'error': true,
-              'message': 'Login failed. The server is not responding correctly.',
-              'details': 'Status: ${response.statusCode}, Error: ${e.toString().substring(0, min(100, e.toString().length))}'
+              'message':
+                  'Login failed. The server is not responding correctly.',
+              'details':
+                  'Status: ${response.statusCode}, Error: ${e.toString().substring(0, min(100, e.toString().length))}'
             };
           }
         }
@@ -297,7 +313,7 @@ class AuthApiService {
       _logger.i("Social login: $provider");
 
       final headers = await _getHeaders(requiresAuth: false);
-      
+
       final requestBody = {
         'provider': provider,
         'access_token': token,
@@ -309,10 +325,10 @@ class AuthApiService {
             headers: headers,
             body: json.encode(requestBody),
           )
-          .timeout(Duration(seconds: 10));
+          .timeout(const Duration(seconds: 10));
 
       _logger.d("Social login response status: ${response.statusCode}");
-      
+
       Map<String, dynamic> responseData;
       try {
         responseData = json.decode(response.body) as Map<String, dynamic>;
@@ -337,11 +353,13 @@ class AuthApiService {
         }
         return responseData;
       } else {
-        _logger.w("Social login failed with status code: ${response.statusCode}");
+        _logger
+            .w("Social login failed with status code: ${response.statusCode}");
         _logger.d("Social login error response: $responseData");
         return {
           'error': true,
-          'message': _extractErrorMessage(responseData) ?? 'Social login failed',
+          'message':
+              _extractErrorMessage(responseData) ?? 'Social login failed',
           'data': responseData,
         };
       }
@@ -349,14 +367,17 @@ class AuthApiService {
       _logger.e("Social login timeout error", error: e);
       return {
         'error': true,
-        'message': e.message ?? 'Connection timed out. Please check your server and try again.',
+        'message': e.message ??
+            'Connection timed out. Please check your server and try again.',
       };
     } catch (e) {
       String errorMessage = 'Network error: ${e.toString()}';
       if (e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Cannot connect to server. Please make sure your Django server is running and accessible.';
+        errorMessage =
+            'Cannot connect to server. Please make sure your Django server is running and accessible.';
       } else if (e.toString().contains('Connection refused')) {
-        errorMessage = 'Connection refused. Make sure your server is running on the correct port.';
+        errorMessage =
+            'Connection refused. Make sure your server is running on the correct port.';
       }
       _logger.e("Social login error: $errorMessage", error: e);
       return {
@@ -379,11 +400,13 @@ class AuthApiService {
         'email': email,
       };
 
-      final response = await _client.post(
-        Uri.parse(forgotPasswordUrl),
-        headers: headers,
-        body: json.encode(requestBody),
-      ).timeout(Duration(seconds: 15));
+      final response = await _client
+          .post(
+            Uri.parse(forgotPasswordUrl),
+            headers: headers,
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 15));
 
       Map<String, dynamic> responseData;
       try {
@@ -403,7 +426,8 @@ class AuthApiService {
         _logger.w("Password reset request failed: ${response.statusCode}");
         return {
           'error': true,
-          'message': _extractErrorMessage(responseData) ?? 'Failed to send reset email',
+          'message': _extractErrorMessage(responseData) ??
+              'Failed to send reset email',
           'data': responseData,
         };
       }
@@ -428,11 +452,13 @@ class AuthApiService {
         'new_password': newPassword,
       };
 
-      final response = await _client.post(
-        Uri.parse(resetPasswordUrl),
-        headers: headers,
-        body: json.encode(requestBody),
-      ).timeout(Duration(seconds: 15));
+      final response = await _client
+          .post(
+            Uri.parse(resetPasswordUrl),
+            headers: headers,
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 15));
 
       Map<String, dynamic> responseData;
       try {
@@ -452,7 +478,8 @@ class AuthApiService {
         _logger.w("Password reset failed: ${response.statusCode}");
         return {
           'error': true,
-          'message': _extractErrorMessage(responseData) ?? 'Failed to reset password',
+          'message':
+              _extractErrorMessage(responseData) ?? 'Failed to reset password',
           'data': responseData,
         };
       }
@@ -466,7 +493,7 @@ class AuthApiService {
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
       final headers = await _getHeaders(requiresAuth: true);
-      
+
       final response = await _makeRequest(
         () => http.get(
           Uri.parse(ApiConstants.currentUser),
@@ -481,7 +508,8 @@ class AuthApiService {
         return data;
       } else {
         _logger.e("Failed to fetch current user", error: response.body);
-        throw Exception(_extractErrorMessage(jsonDecode(response.body)) ?? 'Failed to get current user');
+        throw Exception(_extractErrorMessage(jsonDecode(response.body)) ??
+            'Failed to get current user');
       }
     } catch (e) {
       _logger.e("Error fetching current user", error: e);
@@ -494,44 +522,48 @@ class AuthApiService {
   Future<Map<String, dynamic>> logout() async {
     try {
       _logger.i("Logging out user");
-      
+
       final headers = await _getHeaders();
       final logoutUrl = ApiConstants.logout;
-      
+
       // Get the refresh token to send to backend for blacklisting
       final refreshToken = await _getRefreshToken();
-      
+
       if (refreshToken == null) {
         _logger.w("No refresh token found, clearing local storage only");
         await _removeTokens();
         return {'success': true, 'message': 'Logged out successfully'};
       }
-      
+
       try {
-        final response = await _client.post(
-          Uri.parse(logoutUrl),
-          headers: headers,
-          body: jsonEncode({
-            'refresh': refreshToken,
-          }),
-        ).timeout(Duration(seconds: 10));
-        
+        final response = await _client
+            .post(
+              Uri.parse(logoutUrl),
+              headers: headers,
+              body: jsonEncode({
+                'refresh': refreshToken,
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
+
         // Clear tokens regardless of response
         await _removeTokens();
-        
+
         if (response.statusCode == 200) {
           _logger.i("Logout successful");
           return {'success': true, 'message': 'Logged out successfully'};
         } else {
-          _logger.w("Logout failed: ${response.statusCode}, but tokens cleared locally");
+          _logger.w(
+              "Logout failed: ${response.statusCode}, but tokens cleared locally");
           return {
-            'success': true, 
+            'success': true,
             'message': 'Logged out locally, but server logout failed',
             'details': 'Server response: ${response.statusCode}'
           };
         }
       } catch (e) {
-        _logger.e("Logout request failed: ${e.toString()}, but tokens cleared locally");
+        _logger.e(
+            "Logout request failed: ${e.toString()}, but tokens cleared locally");
         await _removeTokens();
         return {
           'success': true,

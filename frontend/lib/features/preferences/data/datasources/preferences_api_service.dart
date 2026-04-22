@@ -8,7 +8,7 @@ import '../models/preference_update.dart';
 import '../models/content_interaction.dart';
 
 class PreferencesApiService {
-  final String baseUrl = 'http://localhost:8000/api/';
+  final String baseUrl = 'https://localhost:8000/api/';
   final _storage = const FlutterSecureStorage();
   final _logger = Logger();
 

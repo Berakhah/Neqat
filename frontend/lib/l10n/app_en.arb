@@ -30,7 +30,7 @@
   "editButton": "Edit",
   "globalNewsOption": "Global news",
   "loginTitle": "Login",
-  "emailHint": "Enter your name",
+  "emailHint": "Enter your email",
   "passwordHint": "Enter your password",
   "forgotPasswordLink": "Forgot Password?",
   "emptyFieldsError": "Please fill in all fields",
@@ -44,6 +44,8 @@
   "createAccountTitle": "Create Account",
   "signUpSubtitle": "Sign up to get started",
   "fullNameHint": "Full Name",
+  "firstNameHint": "First Name",
+  "lastNameHint": "Last Name",
   "confirmPasswordHint": "Confirm Password",
   "termsAndConditionsLabel": "I agree to the Terms of Service and Privacy Policy",
   "invalidEmailError": "Please enter a valid email address",
@@ -52,9 +54,9 @@
   "termsNotAcceptedError": "Please accept the terms and conditions",
   "registrationFailedError": "Registration failed. Please try again.",
   "unexpectedError": "An unexpected error occurred. Please try again.",
-  "registrationSuccessMessage": "Registration successful! You can now login.",
+  "registrationSuccessMessage": "Registration successful! Please check your email to verify your account.",
   "successTitle": "Success",
-  "accountCreatedMessage": "Your account has been created successfully. Please login with your credentials.",
+  "accountCreatedMessage": "Your account has been created successfully. Please check your email to verify your account before logging in.",
   "okButton": "OK",
   "registerButton": "Register",
   "orSignUpWith": "Or Sign Up with",
@@ -92,10 +94,34 @@
   "confirmNewPasswordHint": "Confirm New Password",
   "sendResetInstructionsButton": "Send Reset Instructions",
   "resetPasswordButton": "Reset Password",
-  "bookmarksTitle": "Bookmarks",
-  "noBookmarksMessage": "You haven't bookmarked any articles yet.",
-  "errorLoadingBookmarks": "Failed to load bookmarks. Please try again.",
-  "retryButton": "Retry",
+  "resendCodeButton": "Resend Code",
+  
+  "biometricPrompt": "Authenticate using your biometric",
+  "biometricAuthNoSavedPassword": "No saved password found for biometric authentication",
+  "biometricAuthFailed": "Biometric authentication failed",
+  "biometricAuthNotAvailable": "Biometric authentication is not available on this device",
+  "biometricAuthLocked": "Biometric authentication is locked, please try again later",
+  "biometricLoginTitle": "Biometric Login",
+  "biometricLoginPrompt": "Do you want to log in using biometric authentication?",
+  "biometricSetupTitle": "Enable Biometric Login",
+  "biometricSetupPrompt": "Would you like to enable biometric login for faster access next time?",
+  "biometricSetupSuccess": "Biometric login has been enabled",
+  "biometricSetupFailed": "Failed to enable biometric login",
+
+  "passwordMatchSuccess": "Passwords match",
+  "passwordRequirementsHeader": "Password requirements:",
+  "passwordLengthRequirement": "At least 8 characters",
+  "passwordLettersRequirement": "Contains letters",
+  "passwordNumbersRequirement": "Contains numbers",
+  "termsOfServiceTitle": "Terms of Service",
+  "privacyPolicyTitle": "Privacy Policy",
+  "closeButton": "Close",
+  "agreeToTermsPrefix": "I agree to the ",
+  "termsText": "Terms of Service",
+  "andText": " and ",
+  "privacyPolicyText": "Privacy Policy",
+  "termsDataProcessingText": " of Neqat. I understand my data will be processed in accordance with these policies.",
+  
   "newsTitle": "{category} News",
   "@newsTitle": {
     "description": "Title for a news section with a dynamic category name",
@@ -184,177 +210,5 @@
   "technologyCategory": "Technology",
   "@technologyCategory": {
     "description": "Category name for technology news"
-  },
-  "commentsPageTitle": "Comments",
-  "@commentsPageTitle": {
-    "description": "Title of the comments page"
-  },
-  "noCommentsMessage": "No comments yet",
-  "@noCommentsMessage": {
-    "description": "Message displayed when there are no comments"
-  },
-  "addCommentHint": "Add a comment...",
-  "@addCommentHint": {
-    "description": "Hint text for adding a new comment"
-  },
-  "writeReplyHint": "Write your reply...",
-  "@writeReplyHint": {
-    "description": "Hint text for replying to a comment"
-  },
-  "loginAgainMessage": "Please log in again",
-  "@loginAgainMessage": {
-    "description": "Message prompting user to log in again"
-  },
-  "sessionExpiredMessage": "Session expired. Please log in again.",
-  "@sessionExpiredMessage": {
-    "description": "Message indicating session expiration"
-  },
-  "tokenRefreshError": "Error refreshing token: {error}",
-  "@tokenRefreshError": {
-    "description": "Error message for token refresh failure",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "articleNotFoundMessage": "Article not found in backend",
-  "@articleNotFoundMessage": {
-    "description": "Message when an article is not found in the backend"
-  },
-  "fetchArticleIdError": "Failed to fetch article ID: {details}",
-  "@fetchArticleIdError": {
-    "description": "Error message for failing to fetch article ID",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "fetchArticleIdException": "Error fetching article ID: {error}",
-  "@fetchArticleIdException": {
-    "description": "Exception message for fetching article ID",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "invalidCommentDataMessage": "Invalid comment data format",
-  "@invalidCommentDataMessage": {
-    "description": "Message for invalid comment data format"
-  },
-  "loadCommentsError": "Failed to load comments: {details}",
-  "@loadCommentsError": {
-    "description": "Error message for failing to load comments",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "loadCommentsException": "Error loading comments: {error}",
-  "@loadCommentsException": {
-    "description": "Exception message for loading comments",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "postCommentNoIdMessage": "Cannot post comment: Article ID not found",
-  "@postCommentNoIdMessage": {
-    "description": "Message when posting a comment fails due to missing article ID"
-  },
-  "emptyCommentMessage": "Comment cannot be empty",
-  "@emptyCommentMessage": {
-    "description": "Message when a comment field is empty"
-  },
-  "commentPostedMessage": "Comment posted successfully",
-  "@commentPostedMessage": {
-    "description": "Success message for posting a comment"
-  },
-  "postCommentError": "Failed to post comment: {details}",
-  "@postCommentError": {
-    "description": "Error message for failing to post a comment",
-    "placeholders": {
-      "details": {
-        "type": "String"
-      }
-    }
-  },
-  "generalErrorMessage": "Error: {error}",
-  "@generalErrorMessage": {
-    "description": "General error message",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "replyingToLabel": "Replying to @{username}",
-  "@replyingToLabel": {
-    "description": "Label indicating a reply to a specific user",
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
-"replyCountLabel": "{count} repl{countIsOne, plural, one{y} other{ies}}",
-"@replyCountLabel": {
-  "description": "Label for the number of replies, with plural support",
-  "placeholders": {
-    "count": {
-      "type": "int"
-    },
-    "countIsOne": {
-      "type": "int"
-    }
-  }
-},
-  "searchNewsHint": "Search News",
-  "@searchNewsHint": {
-    "description": "Hint text for the search news input field"
-  },
-  "originalQueryLabel": "Original: {query}",
-  "@originalQueryLabel": {
-    "description": "Label for the original search query",
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
-  "stemmedQueryLabel": "Stemmed: {query}",
-  "@stemmedQueryLabel": {
-    "description": "Label for the stemmed search query",
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
-  "noNewsOrMessagesFound": "No news or Telegram messages found",
-  "@noNewsOrMessagesFound": {
-    "description": "Message displayed when no news or Telegram messages are found"
-  },
-  "totalArticlesLabel": "Found {count} articles",
-  "@totalArticlesLabel": {
-    "description": "Label for the total number of articles found",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "totalTelegramMessagesLabel": "Found {count} telegram messages",
-  "@totalTelegramMessagesLabel": {
-    "description": "Label for the total number of Telegram messages found",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   }
 }

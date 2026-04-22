@@ -9,9 +9,6 @@ class ListTiles extends StatelessWidget {
     required this.trailingWidget,
     // required this.iconBackgroundColor,
     this.isDark = false,
-    this.onTap,
-    this.splashColor,
-    this.highlightColor,
   });
 
   final IconData leadingIcon;
@@ -19,36 +16,28 @@ class ListTiles extends StatelessWidget {
   final Widget trailingWidget;
   // final Color? iconBackgroundColor;
   final bool isDark;
-  final VoidCallback? onTap;
-  final Color? splashColor;
-  final Color? highlightColor;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      splashColor: splashColor,
-      highlightColor: highlightColor,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(5.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.0),
-                  // color: iconBackgroundColor,
-                ),
-                child: Icon(leadingIcon, size: 23.0),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                // color: iconBackgroundColor,
               ),
-              SizedBox(width: 6.0),
-              Text(leadingText, style: getDeliusTextStyle(isDark: isDark)),
-            ],
-          ),
-          SizedBox(width: 50, height: 20, child: trailingWidget),
-        ],
-      ),
+              child: Icon(leadingIcon, size: 23.0),
+            ),
+            const SizedBox(width: 6.0),
+            Text(leadingText, style: getDeliusTextStyle(isDark: isDark)),
+          ],
+        ),
+        SizedBox(width: 50, height: 20, child: trailingWidget),
+      ],
     );
   }
 }
