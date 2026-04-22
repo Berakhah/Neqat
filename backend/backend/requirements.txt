@@ -1,0 +1,1 @@
+"Django djangorestframework djangorestframework-simplejwt social-auth-app-django mssql-django pyodbc django-cors-headers Pillow drf-yasg python-dotenv django-ratelimit requests" 
