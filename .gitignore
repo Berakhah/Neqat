@@ -60,3 +60,11 @@ api.env
 __pycache__/
 *.py[cod]
 *$py.class
+# Secrets and local TLS material: never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+certs/
