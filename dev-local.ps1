@@ -74,7 +74,7 @@ DATABASE_NAME=NeqatDB
 DATABASE_HOST=localhost
 DATABASE_PORT=1433
 DATABASE_USER=sa
-DATABASE_PASSWORD=ChangeMe_Dev123!
+DATABASE_PASSWORD=<set-locally>
 DATABASE_OPTIONS=driver=ODBC Driver 18 for SQL Server;TrustServerCertificate=yes;Encrypt=no;
 
 # Email Settings
@@ -98,9 +98,9 @@ X_FRAME_OPTIONS=DENY
 KEYCLOAK_SERVER_URL=http://localhost:8080
 KEYCLOAK_REALM=neqat-realm
 KEYCLOAK_CLIENT_ID=django-backend
-KEYCLOAK_CLIENT_SECRET=jOjIj1K1ULe9pOSSA3hP4s61EhCESe1j
+KEYCLOAK_CLIENT_SECRET=<set-locally>
 KEYCLOAK_ADMIN_USERNAME=admin
-KEYCLOAK_ADMIN_PASSWORD=AdminPassword123!
+KEYCLOAK_ADMIN_PASSWORD=<set-locally>
 "@ | Out-File -FilePath ".\backend\.env.local" -Encoding utf8
         Write-Host "Created backend/.env.local file." -ForegroundColor Green
     }

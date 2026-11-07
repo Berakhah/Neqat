@@ -1,6 +1,6 @@
 # Neqat — Social Content Platform (prototype)
 
-> Personal project, built on my own time and equipment. No employer code. An early prototype (5 commits), not a production system.
+> Personal project, built on my own time and equipment. No employer code. An early prototype, not a production system. The dev script no longer carries real secrets. Older commits still contain the values I used for a local dev stack; they must not be reused anywhere.
 
 **Secure-by-design backend architecture with enterprise IAM, real-time moderation telemetry, and scalable API services.**
 
