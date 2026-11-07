@@ -1,4 +1,7 @@
-# Neqat — Production-Grade Social Content Platform
+# Neqat — Social Content Platform (prototype)
+
+> Personal project, built on my own time and equipment. No employer code. An early prototype (5 commits), not a production system.
+
 **Secure-by-design backend architecture with enterprise IAM, real-time moderation telemetry, and scalable API services.**
 
 ---
